@@ -1,0 +1,2267 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0d12">
+<title>点検スケジューラ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap');
+:root{
+  --bg:#0a0d12;--surface:#111520;--card:#161c28;--card2:#1c2438;
+  --border:#222d42;--border2:#2a3850;
+  --accent:#4d9fff;--adim:rgba(77,159,255,.12);
+  --green:#3ddc84;--gdim:rgba(61,220,132,.12);
+  --orange:#ff8c42;--odim:rgba(255,140,66,.12);
+  --red:#ff4d6a;--rdim:rgba(255,77,106,.12);
+  --yellow:#ffc233;--ydim:rgba(255,194,51,.1);
+  --purple:#a78bfa;--pdim:rgba(167,139,250,.12);
+  --text:#e2eaf8;--text2:#7a90b8;--text3:#3d5070;
+  --mono:'Share Tech Mono',monospace;
+  --nav-h:64px;--sbi:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+.app{display:flex;flex-direction:column;height:100dvh;height:100vh;}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:52px;display:flex;align-items:center;gap:10px;flex-shrink:0;z-index:10;}
+.hdr-back{width:36px;height:36px;display:none;align-items:center;justify-content:center;border:none;background:none;color:var(--accent);font-size:20px;cursor:pointer;border-radius:8px;}
+.hdr-back.vis{display:flex;}
+.hdr-back:active{background:var(--adim);}
+.hdr-title{font-size:15px;font-weight:700;flex:1;}
+.hdr-badge{font-size:10px;color:var(--text3);font-family:var(--mono);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--sbi) + 8px);}
+.bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--sbi));padding-bottom:var(--sbi);background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:50;}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;border:none;background:none;color:var(--text3);padding:8px 0;}
+.ni.active{color:var(--accent);}
+.ni-icon{font-size:22px;line-height:1;}
+.ni-lbl{font-size:10px;font-weight:500;}
+.ni-dot{width:5px;height:5px;border-radius:50%;background:var(--accent);opacity:0;margin-top:-2px;}
+.ni.active .ni-dot{opacity:1;}
+.screen{display:none;}
+.screen.active{display:block;animation:su .2s cubic-bezier(.22,1,.36,1);}
+@keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Type select */
+.tsel{padding:20px 16px;}
+.tsel h2{font-size:20px;font-weight:700;margin-bottom:4px;}
+.tsel p{font-size:13px;color:var(--text2);margin-bottom:24px;}
+.tcards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 16px;cursor:pointer;transition:all .18s cubic-bezier(.34,1.3,.64,1);position:relative;overflow:hidden;user-select:none;}
+.tc:active{transform:scale(.96);}
+.tc::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .18s;border-radius:15px;}
+.tc[data-t=meeting]::after{background:radial-gradient(ellipse at 20% 20%,rgba(77,159,255,.1),transparent 70%);}
+.tc[data-t=inspection]::after{background:radial-gradient(ellipse at 20% 20%,rgba(61,220,132,.1),transparent 70%);}
+.tc[data-t=task]::after{background:radial-gradient(ellipse at 20% 20%,rgba(255,140,66,.1),transparent 70%);}
+.tc[data-t=other]::after{background:radial-gradient(ellipse at 20% 20%,rgba(167,139,250,.1),transparent 70%);}
+.tc:active::after{opacity:1;}
+.tc-icon{font-size:28px;margin-bottom:10px;display:block;}
+.tc-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+.tc-desc{font-size:11px;color:var(--text2);line-height:1.5;}
+
+/* Title preview badge */
+.title-preview{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--accent);font-family:var(--mono);line-height:1.5;margin-top:10px;word-break:break-all;}
+.title-preview-label{font-size:10px;color:var(--text3);margin-bottom:4px;font-family:var(--mono);}
+
+/* Form */
+.fp{padding:16px;}
+.sec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+.sh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.st{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;font-family:var(--mono);}
+.sb{padding:14px 16px;}
+.field{margin-bottom:14px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:11px;color:var(--text2);margin-bottom:5px;font-family:var(--mono);letter-spacing:.05em;}
+.req{color:var(--red);margin-left:2px;}
+input[type=text],input[type=date],input[type=time],input[type=number],input[type=email],select,textarea{width:100%;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;font-size:15px;font-family:'Noto Sans JP',sans-serif;color:var(--text);outline:none;appearance:none;-webkit-appearance:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a90b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;}
+select option{background:var(--card2);}
+textarea{resize:none;min-height:88px;line-height:1.7;}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.cg{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{background:var(--card2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;font-size:13px;cursor:pointer;color:var(--text2);font-family:'Noto Sans JP',sans-serif;white-space:nowrap;user-select:none;}
+.chip:active{opacity:.7;}
+.chip.cb{background:var(--adim);border-color:var(--accent);color:var(--accent);}
+.chip.cg2{background:var(--gdim);border-color:var(--green);color:var(--green);}
+.chip.co{background:var(--odim);border-color:var(--orange);color:var(--orange);}
+.chip.cr{background:var(--rdim);border-color:var(--red);color:var(--red);}
+.chip.cp{background:var(--pdim);border-color:var(--purple);color:var(--purple);}
+.ug{display:flex;flex-wrap:wrap;gap:8px;}
+.uc{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer;color:var(--text2);font-family:var(--mono);user-select:none;}
+.uc.sel{background:var(--gdim);border-color:var(--green);color:var(--green);}
+.lrows{margin-bottom:10px;}
+.lr{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.lr input{flex:1;}
+.bdel{width:36px;height:36px;flex-shrink:0;background:none;border:1px solid var(--border2);border-radius:8px;color:var(--text3);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.bdel:active{background:var(--rdim);color:var(--red);border-color:var(--red);}
+.badd{width:100%;background:none;border:1px dashed var(--border2);border-radius:10px;padding:10px;font-size:13px;color:var(--text3);cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+.badd:active{border-color:var(--accent);color:var(--accent);}
+.tw{display:flex;align-items:center;gap:8px;}
+.tl{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.tog{position:relative;width:40px;height:22px;cursor:pointer;}
+.tog input{opacity:0;width:0;height:0;}
+.tt{position:absolute;inset:0;background:var(--border2);border-radius:22px;transition:background .2s;}
+.tog input:checked+.tt{background:var(--accent);}
+.tth{position:absolute;width:16px;height:16px;top:3px;left:3px;background:white;border-radius:50%;transition:transform .2s;pointer-events:none;}
+.tog input:checked~.tth{transform:translateX(18px);}
+.pb{display:none;}
+.pb.open{display:block;}
+.cr2{display:flex;gap:8px;}
+.cr2 select{flex:1;}
+.birr{width:46px;height:46px;flex-shrink:0;background:var(--card2);border:1px solid var(--border2);border-radius:10px;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.birr:active{background:var(--adim);border-color:var(--accent);}
+.rbox{background:var(--ydim);border:1px solid rgba(255,194,51,.25);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--yellow);line-height:1.6;margin-top:12px;white-space:pre-line;}
+
+/* Submit */
+.submit-area{margin-top:4px;margin-bottom:2px;}
+.submit-label{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:center;margin-bottom:8px;letter-spacing:.06em;}
+.submit-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px;}
+.bsub{width:100%;border:none;border-radius:14px;padding:14px 10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans JP',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.bsub:active{opacity:.85;transform:scale(.98);}
+.bsub-pa{background:linear-gradient(135deg,#1a6fd4,var(--accent));color:white;}
+.bsub-ics{background:var(--card2);border:1px solid var(--border2);color:var(--text2);}
+.bsub-ics:active{border-color:var(--green);color:var(--green);}
+/* Category chips */
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.cat-chip{padding:7px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:2px solid transparent;background:var(--card2);color:var(--text2);transition:all .15s;user-select:none;font-family:'Noto Sans JP',sans-serif;font-weight:500;}
+.cat-chip:active{opacity:.7;}
+.cat-chip.active{color:#fff;font-weight:700;}
+.cat-none{border-color:var(--border2);}
+.cat-none.active{background:var(--border2);color:var(--text);border-color:var(--border2);}
+.submit-note{text-align:center;font-size:10px;color:var(--text3);font-family:var(--mono);line-height:1.8;}
+
+/* Master */
+.ms{padding:16px;}
+.msec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+.ml{list-style:none;}
+.mi{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);}
+.mi:last-child{border-bottom:none;}
+.mdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mn{flex:1;font-size:14px;}
+.msb2{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.mdel{width:30px;height:30px;background:none;border:none;color:var(--text3);cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.mdel:active{background:var(--rdim);color:var(--red);}
+.madd{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);}
+.madd input{flex:1;font-size:14px;}
+.bmadd{background:var(--adim);border:1px solid rgba(77,159,255,.3);border-radius:10px;padding:0 16px;font-size:13px;color:var(--accent);cursor:pointer;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;}
+.bmadd:active{background:rgba(77,159,255,.2);}
+.uadd{padding:12px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;}
+.uadd select,.uadd input{font-size:14px;}
+.uab{display:flex;gap:8px;}
+.uab input{flex:1;}
+
+/* Settings */
+.sts{padding:16px;}
+.stcard{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.stbody{padding:16px;}
+.stbody p{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px;}
+.snote{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:8px;}
+.mode-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.mode-row:last-of-type{border-bottom:none;margin-bottom:0;}
+.mode-label{font-size:13px;}
+.mode-sub{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.bexp{width:100%;background:var(--adim);border:1px solid rgba(77,159,255,.3);border-radius:10px;padding:12px;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer;font-family:'Noto Sans JP',sans-serif;margin-bottom:10px;}
+.bexp:active{opacity:.7;}
+/* Sort list */
+.sort-list{list-style:none;}
+.sort-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
+.sort-item:last-child{border-bottom:none;}
+.sort-label{flex:1;}
+.sort-btns{display:flex;gap:4px;}
+.sort-btn{background:var(--card2);border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text2);font-size:13px;display:flex;align-items:center;justify-content:center;}
+.sort-btn:active{background:var(--adim);color:var(--accent);border-color:var(--accent);}
+.sort-btn:disabled{opacity:.3;cursor:default;}
+.imp-lbl{display:block;background:var(--card2);border:1px dashed var(--border2);border-radius:10px;padding:12px;font-size:13px;color:var(--text3);text-align:center;cursor:pointer;}
+
+/* Help */
+.hcard{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.hacc{width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;}
+.hacc:active{background:var(--card2);}
+.htag{width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);}
+.htitle{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.harr{font-size:18px;color:var(--text3);transition:transform .2s;}
+.hacc.open .harr{transform:rotate(90deg);}
+.hbody{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+.hbody.open{display:block;}
+.hq{font-size:12px;font-weight:700;color:var(--accent);margin-top:14px;margin-bottom:4px;}
+.ha{font-size:12px;color:var(--text2);line-height:1.8;}
+.hnote{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.hcode{background:var(--card2);border:1px solid var(--border2);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--accent);}
+.hpre{background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:10px;font-family:var(--mono);font-size:10px;color:var(--text2);margin-top:6px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;line-height:1.6;}
+.herr{background:var(--rdim);border:1px solid rgba(255,77,106,.2);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:10px;color:var(--red);margin:8px 0;line-height:1.6;}
+
+/* Modal */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.mbg.open{display:flex;}
+.msh{background:var(--surface);border-radius:20px 20px 0 0;border:1px solid var(--border);border-bottom:none;padding:20px 20px calc(20px + var(--sbi));width:100%;max-width:540px;animation:shup .25s cubic-bezier(.22,1,.36,1);}
+@keyframes shup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mh{width:36px;height:4px;background:var(--border2);border-radius:4px;margin:0 auto 16px;}
+.mtitle{font-size:14px;font-weight:700;color:var(--accent);font-family:var(--mono);margin-bottom:16px;}
+.mac{display:flex;gap:10px;margin-top:16px;}
+.bcancel{flex:1;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:13px;font-size:14px;color:var(--text2);cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+.bok{flex:2;background:var(--accent);border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:700;color:white;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+.crow{display:flex;gap:8px;margin-bottom:10px;font-size:13px;}
+.clbl{color:var(--text3);min-width:60px;flex-shrink:0;font-family:var(--mono);font-size:11px;padding-top:2px;}
+.cval{color:var(--text2);line-height:1.5;}
+
+.toast{position:fixed;bottom:calc(var(--nav-h) + var(--sbi) + 12px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border2);color:var(--text);padding:10px 20px;border-radius:24px;font-size:13px;font-weight:600;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:300;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media(min-width:600px){.tcards{grid-template-columns:repeat(4,1fr)}.body{max-width:640px;margin:0 auto}.bnav{max-width:640px;left:50%;transform:translateX(-50%)}.msh{border-radius:16px;margin-bottom:24px}.mbg{align-items:center}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <button class="hdr-back" id="btn-back" onclick="goBack()">‹</button>
+  <div class="hdr-title" id="hdr-title">⚡ スケジューラ</div>
+  <div class="hdr-badge" id="hdr-badge"></div>
+</div>
+
+<div class="body" id="app-body">
+
+  <!-- TYPE SELECT -->
+  <div class="screen active tsel" id="screen-select">
+    <h2>どの予定を登録しますか？</h2>
+    <p>種類を選んでください</p>
+    <div class="tcards" style="grid-template-columns:1fr 1fr;">
+      <div class="tc" data-t="inspection" onclick="goForm('inspection')">
+        <span class="tc-icon">⚡</span><div class="tc-name">発電機メンテ</div><div class="tc-desc">点検・トラブル・打合せ・その他</div>
+      </div>
+      <div class="tc" data-t="meeting" onclick="goForm('meeting')">
+        <span class="tc-icon">📅</span><div class="tc-name">会議・その他</div><div class="tc-desc">会議・個人タスク・メモなど</div>
+      </div>
+      <div class="tc" data-t="attendance" onclick="goForm('attendance')" style="grid-column:1/-1;">
+        <span class="tc-icon">🗓</span><div class="tc-name">勤怠・休暇</div><div class="tc-desc">有休・半休・社内勤務</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEETING FORM -->
+  <div class="screen fp" id="screen-meeting">
+    <div class="sec">
+      <div class="sh"><div class="st">種別</div></div>
+      <div class="sb">
+        <div class="cg" id="mt-chips">
+          <div class="chip cb" onclick="selChip('mt-chips',this,'cb','社内会議')">👥 社内</div>
+          <div class="chip" onclick="selChip('mt-chips',this,'cg2','社外打合せ')">🤝 社外</div>
+          <div class="chip" onclick="selChip('mt-chips',this,'co','個人タスク')">📌 タスク</div>
+          <div class="chip" onclick="selChip('mt-chips',this,'cp','その他')">📝 その他</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">基本情報</div></div>
+      <div class="sb">
+        <div class="field"><label>件名<span class="req">*</span></label><input type="text" id="m-title" placeholder="例：週次チームMTG" oninput="updateMTitle()"></div>
+        <div class="fr">
+          <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="m-date" oninput="calcR('m')"></div>
+          <div class="field"><label>場所 / URL</label><input type="text" id="m-loc" placeholder="会議室A"></div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>開始</label><input type="time" id="m-start" value="10:00"></div>
+          <div class="field"><label>終了</label><input type="time" id="m-end" value="11:00"></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">議題・内容</div></div>
+      <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
+    </div>
+    <div class="sec" id="m-att-sec">
+      <div class="sh"><div class="st">参加者</div></div>
+      <div class="sb">
+        <div class="lrows" id="m-att-rows"><div class="lr"><input type="text" placeholder="氏名"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('m-att-rows','氏名')">＋ 参加者を追加</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="m-pl">なし</span><label class="tog"><input type="checkbox" id="m-pt" onchange="togPrep('m')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="m-pb">
+        <div class="lrows" id="m-todo-rows"><div class="lr"><input type="text" placeholder="例：資料を事前共有する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('m-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="m-pd" value="1" min="1" max="30" oninput="calcR('m')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="m-ptime" value="09:00" oninput="calcR('m')"></div>
+          </div>
+          <div class="rbox" id="m-rbox">📅 日付を入力すると計算します</div>
+        </div>
+      </div>
+    </div>
+    <!-- 表示方法 -->
+    <div class="sec">
+      <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="m-showas-chips">
+          <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
+          <div class="chip cb" id="m-sa-busy" onclick="selShowAs('m','busy')">🔳 予定あり</div>
+          <div class="chip" id="m-sa-tentative" onclick="selShowAs('m','tentative')">❓ 仮の予定</div>
+        </div>
+      </div>
+    </div>
+    <!-- 色分類 -->
+    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb">
+        <div class="field" style="margin-bottom:0;">
+          <div class="cat-chips" id="m-cat-chips">
+            <div class="cat-chip cat-none active" onclick="selCat(this,'','','m')">なし</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="submit-area" id="m-submit-area"></div>
+  </div>
+
+  <!-- INSPECTION FORM -->
+  <div class="screen fp" id="screen-inspection">
+    <div class="sec">
+      <div class="sh"><div class="st">現場・号機</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>お客さま<span class="req">*</span></label>
+          <div class="cr2">
+            <select id="i-cust" onchange="onCustChange()"><option value="">— 選択 —</option></select>
+            <button class="birr" onclick="openIrr()">✏️</button>
+          </div>
+        </div>
+        <div class="field"><label>号機（複数選択可）<span class="req">*</span></label><div class="ug" id="i-ug"><span style="font-size:12px;color:var(--text3)">お客さまを選択してください</span></div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">点検種別・担当</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>点検種別<span class="req">*</span></label>
+          <div class="cg" id="i-insp">
+            <div class="chip cb" onclick="selChip('i-insp',this,'cb','定期点検')">🔵 定期点検</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cg2','都度点検')">🟢 都度点検</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cr','トラブル')">🔴 トラブル</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cp','その他')">🟣 その他</div>
+          </div>
+        </div>
+        <div class="field" id="i-other-field" style="display:none;">
+          <label>内容<span class="req">*</span></label>
+          <input type="text" id="i-other-text" placeholder="例：打合せ、受領書受取、立会いなど" oninput="updateITitle()">
+        </div>
+        <div class="field">
+          <label>担当区分<span class="req">*</span></label>
+          <div class="cg" id="i-asgn">
+            <div class="chip cb" onclick="selAssign(this,'cb','','自社対応')">🔵 自社対応</div>
+            <div class="chip" onclick="selAssign(this,'co','委','協力会社委託')">🟠 委託</div>
+            <div class="chip" onclick="selAssign(this,'cg2','同','協力会社同行')">🟢 同行</div>
+          </div>
+        </div>
+        <div class="field" id="i-pf" style="display:none">
+          <label>協力会社</label>
+          <select id="i-partner" onchange="updateITitle()"><option value="">— 選択 —</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">日時</div></div>
+      <div class="sb">
+        <div class="fr">
+          <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
+          <div class="field"><label>終了予定日</label><input type="date" id="i-edate"></div>
+        </div>
+        <div class="fr">
+          <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
+          <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 作業内容 (新規追加) -->
+    <div class="sec">
+      <div class="sh"><div class="st">作業内容</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>作業内容<span style="font-size:10px;color:var(--text3);margin-left:6px;font-family:var(--mono)">件名に反映されます</span></label>
+          <input type="text" id="i-work" placeholder="例：２４０００時間E点検" oninput="updateITitle()">
+        </div>
+        <!-- 件名プレビュー -->
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="i-title-preview">入力すると自動生成されます</div>
+      </div>
+    </div>
+
+    <!-- 移動時間 -->
+    <div class="sec" id="i-travel-sec">
+      <div class="sh">
+        <div class="st">🚗 移動予定</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">空き時間で自動追加</div>
+      </div>
+      <div class="sb">
+        <div class="field">
+          <label>移動時間（分）</label>
+          <input type="number" id="i-travel-min" value="60" min="5" max="480" style="width:100px;text-align:center;">
+        </div>
+        <div class="field">
+          <label>移動パターン（複数選択可）</label>
+          <div class="cg" style="flex-direction:column;gap:8px;">
+            <div class="chip" id="i-tr-go"     onclick="togTravel('go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
+            <div class="chip" id="i-tr-back"   onclick="togTravel('back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
+            <div class="chip" id="i-tr-office" onclick="togTravel('office')">🏢 → 🏭　出社から現場</div>
+            <div class="chip" id="i-tr-return" onclick="togTravel('return')">🏭 → 🏢　帰社</div>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>現場移動（任意）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">前の現場名を入力</span></label>
+          <input type="text" id="i-tr-from-site" placeholder="例：神戸電機㈱（空欄でスキップ）">
+        </div>
+      </div>
+    </div>
+
+    <!-- 繰り返し（長期点検） -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 繰り返し（長期点検）</div>
+        <div class="tw">
+          <span class="tl" id="i-rec-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-rec-tog" onchange="togRecurrence()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-rec-body">
+        <div class="field">
+          <label>繰り返しパターン</label>
+          <div class="cg" id="i-rec-chips">
+            <div class="chip cb" onclick="selRecPattern(this,'WEEKLY;BYDAY=MO,TU,WE,TH,FR','平日のみ')">平日のみ</div>
+            <div class="chip" onclick="selRecPattern(this,'DAILY','毎日（土日含む）')">毎日</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>繰り返し終了日<span class="req">*</span></label>
+          <input type="date" id="i-rec-end" oninput="updateRecPreview()">
+        </div>
+        <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
+      </div>
+    </div>
+
+    <!-- 表示方法 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">📅 Outlook 表示方法</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">担当区分で自動設定</div>
+      </div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="i-showas-chips">
+          <div class="chip" id="i-sa-free" onclick="selShowAs('i','free')">🔲 空き時間</div>
+          <div class="chip cb" id="i-sa-busy" onclick="selShowAs('i','busy')">🔳 予定あり</div>
+          <div class="chip" id="i-sa-tentative" onclick="selShowAs('i','tentative')">❓ 仮の予定</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 色分類 -->
+    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cat-chips" id="i-cat-chips">
+          <div class="cat-chip cat-none active" onclick="selCat(this,'','','i')">なし</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="i-pl">なし</span><label class="tog"><input type="checkbox" id="i-pt" onchange="togPrep('i')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="i-pb">
+        <div class="lrows" id="i-todo-rows"><div class="lr"><input type="text" placeholder="例：安全帳票を作成する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('i-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="i-pd" value="3" min="1" max="30" oninput="calcR('i')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="i-ptime" value="09:00" oninput="calcR('i')"></div>
+          </div>
+          <div class="rbox" id="i-rbox">📅 作業日を入力すると計算します</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">メモ・備考</div></div>
+      <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..."></textarea></div>
+    </div>
+    <!-- 振替休日 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 振替休日</div>
+        <div class="tw">
+          <span class="tl" id="i-furikae-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-furikae-tog" onchange="togInspFurikae()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-furikae-body">
+        <!-- 作業期間内の土日祝カウント -->
+        <div id="i-furikae-scan" style="margin-bottom:12px;">
+          <button class="badd" onclick="scanHolidays()" style="border-style:solid;border-color:var(--accent);color:var(--accent);">
+            🔍 作業期間内の土日祝を検索
+          </button>
+          <div id="i-holiday-list" style="margin-top:10px;"></div>
+        </div>
+        <!-- 追加済み振替休日リスト -->
+        <div id="i-furikae-added" style="margin-bottom:8px;"></div>
+        <!-- 手動追加 -->
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+          <input type="date" id="i-furikae-date" style="flex:1;">
+          <button class="bmadd" onclick="addFurikaeDate(document.getElementById('i-furikae-date').value)">＋ 追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;">追加した日に振替休日の予定が登録されます（終日・空き時間）</div>
+      </div>
+    </div>
+
+    <div class="submit-area" id="i-submit-area"></div>
+  </div>
+
+  <!-- ATTENDANCE FORM -->
+  <div class="screen fp" id="screen-attendance">
+
+    <!-- 種別 -->
+    <div class="sec">
+      <div class="sh"><div class="st">種別</div></div>
+      <div class="sb">
+        <div class="cg" id="att-type-chips">
+          <div class="chip cb"  onclick="selAttType(this,'有休','allday')">🌴 有休</div>
+          <div class="chip"     onclick="selAttType(this,'午前半休','half')">🌅 午前半休</div>
+          <div class="chip"     onclick="selAttType(this,'午後半休','half')">🌇 午後半休</div>
+          <div class="chip"     onclick="selAttType(this,'振替休日','allday')">🔄 振替休日</div>
+          <div class="chip"     onclick="selAttType(this,'社内勤務','work')">🏢 社内勤務</div>
+          <div class="chip"     onclick="selAttType(this,'休日出勤','work')">💼 休日出勤</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 日時 -->
+    <div class="sec">
+      <div class="sh"><div class="st">日時</div></div>
+      <div class="sb">
+        <div class="field-row fr">
+          <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
+          <div class="field"><label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休時</span></label><input type="date" id="att-end-date" oninput="updateAttPreview()"></div>
+        </div>
+        <!-- 時間（終日以外） -->
+        <div id="att-time-row" style="display:none;">
+          <div class="fr">
+            <div class="field"><label>開始</label><input type="time" id="att-start" value="09:00" oninput="updateAttPreview()"></div>
+            <div class="field"><label>終了</label><input type="time" id="att-end" value="13:00" oninput="updateAttPreview()"></div>
+          </div>
+        </div>
+        <!-- 終日トグル -->
+        <div class="field" style="margin-bottom:0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="tog"><input type="checkbox" id="att-allday" checked onchange="togAttAllday()"><div class="tt"></div><div class="tth"></div></label>
+            <span style="font-size:13px;color:var(--text2);">終日</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 件名プレビュー -->
+    <div class="sec">
+      <div class="sh"><div class="st">登録内容</div></div>
+      <div class="sb">
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="att-title-preview">種別を選択してください</div>
+        <div class="field" style="margin-top:12px;margin-bottom:0;">
+          <label>メモ（任意）</label>
+          <input type="text" id="att-memo" placeholder="例：家族旅行、通院など">
+        </div>
+      </div>
+    </div>
+
+    <!-- 振替休日（休日出勤時のみ表示） -->
+    <div class="sec" id="att-furikae-sec" style="display:none;">
+      <div class="sh">
+        <div class="st">🔄 振替休日も登録する</div>
+        <div class="tw">
+          <span class="tl" id="att-furikae-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="att-furikae-tog" onchange="togFurikae()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="att-furikae-body">
+        <div class="field" style="margin-bottom:0;">
+          <label>振替休日の日付<span class="req">*</span></label>
+          <input type="date" id="att-furikae-date">
+        </div>
+        <div class="rbox" style="margin-top:10px;">📋 振替休日の予定が自動で追加されます（終日・空き時間）</div>
+      </div>
+    </div>
+
+    <!-- 表示方法 -->
+    <div class="sec">
+      <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="att-showas-chips">
+          <div class="chip" id="att-sa-free"      onclick="selShowAs('att','free')">🔲 空き時間</div>
+          <div class="chip cb" id="att-sa-busy"   onclick="selShowAs('att','busy')">🔳 予定あり</div>
+          <div class="chip" id="att-sa-tentative" onclick="selShowAs('att','tentative')">❓ 仮の予定</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 色分類 -->
+    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cat-chips" id="att-cat-chips">
+          <div class="cat-chip cat-none active" onclick="selCat(this,'','','att')">なし</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area" id="att-submit-area"></div>
+  </div>
+
+  <!-- MASTER -->
+  <div class="screen ms" id="screen-master">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text2);">🏭 物件・号機</div>
+      <button class="bmadd" style="border-radius:10px;padding:8px 14px;" onclick="openAddCust()">＋ 物件を追加</button>
+    </div>
+    <div id="m-cust-accordion"></div>
+    <div class="msec" style="margin-top:16px;">
+      <div class="sh"><div class="st">🤝 協力会社</div></div>
+      <ul class="ml" id="m-pl2"></ul>
+      <div class="madd"><input type="text" id="add-pt" placeholder="協力会社名を追加"><button class="bmadd" onclick="addPartner()">追加</button></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen sts" id="screen-settings">
+    <div class="stcard">
+      <div class="sh"><div class="st">📨 登録方法の設定</div></div>
+      <div class="stbody">
+        <div class="mode-row">
+          <div><div class="mode-label">Power Automate連携</div><div class="mode-sub">メール送信 → Outlookに自動登録</div></div>
+          <label class="tog"><input type="checkbox" id="cfg-pa" onchange="saveSettings()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+        <div id="pa-addr-field" style="display:none;padding:12px 0 4px">
+          <div class="field" style="margin-bottom:6px"><label>送信先アドレス（自分のOutlook）</label><input type="email" id="cfg-email" placeholder="yourname@company.com" oninput="saveSettings()"></div>
+          <p class="snote">Power Automateのトリガーに使うメールアドレス</p>
+        </div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <div class="field" style="margin-bottom:4px"><label>会社名（移動予定に使用）</label><input type="text" id="cfg-company" placeholder="例：大阪ガス㈱" oninput="saveSettings()"></div>
+          <p class="snote">出社・帰社の移動予定タイトルに使われます</p>
+        </div>
+        <div class="mode-row" style="margin-top:4px">
+          <div><div class="mode-label">ICSダウンロード</div><div class="mode-sub">ファイル保存 → ダブルタップで登録</div></div>
+          <label class="tog"><input type="checkbox" id="cfg-ics" onchange="saveSettings()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+        <p class="snote" style="margin-top:8px">※ 両方ONにすると2つのボタンが表示されます</p>
+      </div>
+    </div>
+    <!-- Category master -->
+    <div class="stcard">
+      <div class="sh"><div class="st">🎨 色分類マスタ</div></div>
+      <div class="stbody" style="padding:0;">
+        <ul class="ml" id="cfg-cat-list"></ul>
+        <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;">
+          <input type="color" id="add-cat-color" value="#4d9fff" style="width:40px;height:36px;padding:2px;border-radius:8px;border:1px solid var(--border2);background:var(--card2);cursor:pointer;">
+          <input type="text" id="add-cat-name" placeholder="分類名（例：点検・作業）" style="flex:1;">
+          <button class="bmadd" onclick="addCategory()">追加</button>
+        </div>
+        <div style="padding:0 16px 12px;font-size:11px;color:var(--text3);font-family:var(--mono);">※ Outlookの色分類名と一致させると自動で色がつきます</div>
+      </div>
+    </div>
+
+    <div class="stcard">
+      <div class="sh"><div class="st">💾 データ管理</div></div>
+      <div class="stbody">
+        <p>マスタデータをエクスポートして別端末へ移行できます。登録した予定内容は含まれません。</p>
+        <button class="bexp" onclick="exportData()">📤 マスタをエクスポート（JSON）</button>
+        <label class="imp-lbl" for="imp-file">📥 インポート（JSONファイルを選択）</label>
+        <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
+        <p class="snote">※ データはこのブラウザにのみ保存されます</p>
+      </div>
+    </div>
+    <div class="stcard">
+      <div class="sh"><div class="st">📋 Power Automateの共有方法</div></div>
+      <div class="stbody">
+        <p>① make.powerautomate.com でフローを開く<br>② 右上「…」→「エクスポート」→「パッケージ（.zip）」<br>③ zipファイルをメンバーに共有<br>④ メンバーはインポートして自分のメールアドレスに変更</p>
+        <p class="snote">※ 各自が自分のOutlookで動かすためアドレス変更が必要です</p>
+      </div>
+    </div>
+
+    <!-- カスタマイズ -->
+    <div class="stcard">
+      <div class="sh"><div class="st">🔧 画面カスタマイズ</div></div>
+      <div class="stbody" style="padding:0;">
+
+        <!-- トップ画面カード -->
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;font-family:var(--mono);">トップ画面の順番</div>
+          <ul class="sort-list" id="sort-top"></ul>
+        </div>
+
+        <!-- 点検種別チップ -->
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;font-family:var(--mono);">点検種別の順番</div>
+          <ul class="sort-list" id="sort-insp"></ul>
+        </div>
+
+        <!-- 勤怠種別チップ -->
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;font-family:var(--mono);">勤怠種別の順番</div>
+          <ul class="sort-list" id="sort-att"></ul>
+        </div>
+
+        <!-- ボトムナビ -->
+        <div style="padding:12px 16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;font-family:var(--mono);">ボトムナビの順番</div>
+          <ul class="sort-list" id="sort-nav"></ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+<!-- HELP SCREEN -->
+<div class="screen" id="screen-help" style="padding:16px;">
+
+  <div style="margin-bottom:16px;">
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">セットアップガイド</div>
+    <div style="font-size:12px;color:var(--text2);">タップして各セクションを開いてください</div>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--adim);color:var(--accent)">1</span>
+      <span class="htitle">アプリの準備</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. どうやって使い始めるの？</div>
+      <div class="ha">index.htmlファイルをダブルクリックするだけでブラウザで開けます。インストール不要です。</div>
+
+      <div class="hq">Q. iPhoneでも使えますか？</div>
+      <div class="ha">使えます。AirDrop・iCloud Drive・メール添付などでiPhoneにindex.htmlを転送してSafariで開いてください。</div>
+
+      <div class="hq">Q. iPhoneのホーム画面に追加するには？</div>
+      <div class="ha">Safariで開いた状態で、画面下の「共有ボタン（□↑）」→「ホーム画面に追加」をタップ。アプリのように使えます。<br><span class="hnote">※ ChromeではなくSafariを使ってください</span></div>
+
+      <div class="hq">Q. GitHubに上げると情報が漏れませんか？</div>
+      <div class="ha">漏れません。お客さまや号機のデータはブラウザ内にのみ保存されます。GitHubにアップロードされるのはHTMLファイルの中身だけで、個人情報は一切含まれていません。</div>
+
+      <div class="hq">Q. メンバーへの共有はどうするの？</div>
+      <div class="ha">index.htmlをAirDrop・メール・チャットなどで送るだけです。受け取った人はダブルクリックすれば使えます。各自のブラウザにデータが保存されるので、情報が混ざることもありません。</div>
+    </div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--gdim);color:var(--green)">2</span>
+      <span class="htitle">Power Automateの設定</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. Power Automateって何？追加費用はかかる？</div>
+      <div class="ha">Microsoft 365に含まれている自動化ツールです。追加費用はかかりません。make.powerautomate.comからアクセスできます。</div>
+
+      <div class="hq">Q. フローの作り方は？</div>
+      <div class="ha">
+        ① make.powerautomate.com にサインイン<br>
+        ② 「作成」→「自動化したクラウドフロー」<br>
+        ③ トリガー：「新しいメールが届いたとき (V3)」を選択<br>
+        ④ 件名フィルター：<span class="hcode">SCHED:</span> を入力<br>
+        ⑤ 「新しいステップ」→「HTMLからテキスト」を追加（コンテンツ：本文）<br>
+        ⑥ 「新しいステップ」→「JSONの解析」を追加<br>
+        ⑦ 「新しいステップ」→「イベントの作成 (V4)」を追加
+      </div>
+
+      <div class="hq">Q. JSONの解析のスキーマは？</div>
+      <div class="ha">
+        以下をそのままコピペしてください：
+        <pre class="hpre">{"type":"object","properties":{"title":{"type":"string"},"start":{"type":"string"},"end":{"type":"string"},"location":{"type":"string"},"category":{"type":"string"},"showAs":{"type":"string"},"units":{"type":"string"},"assign":{"type":"string"},"work":{"type":"string"},"prep":{"type":"string"},"memo":{"type":"string"},"rrule":{"type":"string"},"travelGoStart":{"type":"string"},"travelGoEnd":{"type":"string"},"travelBackStart":{"type":"string"},"travelBackEnd":{"type":"string"},"travelLabel":{"type":"string"}}}</pre>
+      </div>
+
+      <div class="hq">Q. 直行・直帰の移動予定をPower Automateで登録するには？</div>
+      <div class="ha">
+        メインのイベント作成の後に「条件」ステップを2つ追加します：<br><br>
+        <strong>直行の条件：</strong><br>
+        条件：<span class="hcode">travelGoStart</span> が空でない<br>
+        「はいの場合」：イベントの作成（V4）<br>
+        　件名：<span class="hcode">🚗 移動 → @{body('JSON_の解析')?['travelLabel']}</span><br>
+        　開始：<span class="hcode">body('JSON_の解析')?['travelGoStart']</span><br>
+        　終了：<span class="hcode">body('JSON_の解析')?['travelGoEnd']</span><br>
+        　表示方法：空き時間（free）<br><br>
+        <strong>直帰の条件：</strong><br>
+        条件：<span class="hcode">travelBackStart</span> が空でない<br>
+        「はいの場合」：同様に設定
+      </div>
+
+      <div class="hq">Q. 繰り返し（長期点検）をPower Automateで設定するには？</div>
+      <div class="ha">
+        Power AutomateのOutlookイベント作成では繰り返しの設定が複雑なため、<strong>長期点検はICSダウンロード方式を推奨します。</strong><br>
+        ICSファイルには繰り返しルール（平日のみ／毎日）が自動で含まれており、ダブルタップするだけで繰り返し予定が一括登録されます。
+      </div>
+
+      <div class="hq">Q. フローをメンバーに共有するには？</div>
+      <div class="ha">
+        ① フローを開いて右上「…」→「エクスポート」→「パッケージ（.zip）」<br>
+        ② zipファイルをメンバーに共有<br>
+        ③ メンバーはインポート後、メールアドレスを自分のものに変更する
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--adim);color:var(--accent)">3</span>
+      <span class="htitle">Outlookの設定</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. 「登録する」ボタンを押したらNew Outlookが開いてしまう</div>
+      <div class="ha">
+        Windowsのデフォルトメールアプリを変更してください：<br>
+        ① Windowsキー＋I で設定を開く<br>
+        ② 「アプリ」→「既定のアプリ」<br>
+        ③ 検索ボックスに「Outlook」と入力<br>
+        ④ 「Outlook (classic)」をクリック<br>
+        ⑤ 「MAILTO」の項目を「Outlook (classic)」に変更
+      </div>
+
+      <div class="hq">Q. Classic OutlookとNew Outlookの違いは？</div>
+      <div class="ha">このアプリはClassic Outlookと組み合わせて動作確認しています。New Outlookでも動作しますが、デフォルトメールアプリの設定によって意図しない方が開くことがあります。</div>
+
+      <div class="hq">Q. iPhoneでメールを送ると何のアプリが開く？</div>
+      <div class="ha">iPhoneの標準メールアプリが開きます。会社のOutlookアカウントをiPhoneのメールアプリに登録しておくと、そのまま送信できます。設定 →「Outlook」→「デフォルトのメールアプリ」でOutlookアプリに変更することもできます。</div>
+    </div>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--odim);color:var(--orange)">4</span>
+      <span class="htitle">よくあるエラーと対処法</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. Power AutomateでJSONの解析エラーが出る</div>
+      <div class="ha">
+        メール本文がHTML形式で届いているのが原因です。<br>
+        対処：「JSONの解析」ステップの<strong>前</strong>に「HTMLからテキスト」ステップを追加し、「JSONの解析」のコンテンツをその出力結果に変更してください。
+        <div class="herr">アクション 'JSON_の解析' に失敗しました: The 'content' property... cannot be parsed: 'Unexpected character encountered while parsing value: &lt;'</div>
+        このエラーが出たら上記の対処をしてください。
+      </div>
+
+      <div class="hq">Q. AzureポータルでアプリをAzure登録しようとしたら「アクセス許可がありません」と表示された</div>
+      <div class="ha">会社のAzure管理者権限が必要な操作です。このアプリはAzure登録なしで動作するPower Automate連携またはICS方式で使用してください。Azure登録は不要です。</div>
+
+      <div class="hq">Q. 「登録する」ボタンを押しても何も起きない</div>
+      <div class="ha">設定タブでメールアドレスが入力されているか確認してください。またはICSダウンロード方式に切り替えて試してください。</div>
+
+      <div class="hq">Q. ICSファイルをダブルクリックしてもOutlookが開かない</div>
+      <div class="ha">Windowsの既定のアプリでICSファイルの関連付けがOutlookになっていない可能性があります。ICSファイルを右クリック→「プログラムから開く」→「Outlook」を選んでください。</div>
+
+      <div class="hq">Q. Power Automateのフローが動いていない気がする</div>
+      <div class="ha">make.powerautomate.comでフローの「実行履歴」を確認してください。エラーが表示されている場合は、各ステップのエラー内容をもとに対処してください。</div>
+    </div>
+  </div>
+
+  <!-- Section 5 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--gdim);color:var(--green)">5</span>
+      <span class="htitle">データとセキュリティ</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. 入力したお客さまや号機のデータはどこに保存される？</div>
+      <div class="ha">このブラウザ（またはSafari）の中だけに保存されます。サーバーやクラウドには一切送信されません。他の端末では共有されません。</div>
+
+      <div class="hq">Q. 別の端末に引き継ぎたい</div>
+      <div class="ha">設定タブの「マスタをエクスポート」でJSONファイルを書き出し、引き継ぎ先の端末でインポートしてください。予定内容は含まれず、お客さま・号機・協力会社の一覧のみです。</div>
+
+      <div class="hq">Q. ブラウザを変えたりキャッシュを消したらデータは消える？</div>
+      <div class="ha">消えます。別のブラウザや端末に移行する前に必ずエクスポートしてバックアップを取ってください。iPhoneでSafariのキャッシュをクリアした場合も同様です。</div>
+
+      <div class="hq">Q. Power Automateで送るメールに個人情報は含まれる？</div>
+      <div class="ha">メールには点検内容（お客さま名・号機・作業内容など）が含まれます。メールは自分自身のOutlookアドレス宛に送られ、Power Automateがそれを処理してカレンダーに登録します。社外には送信されません。</div>
+    </div>
+  </div>
+
+  <!-- Section 6 -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--pdim);color:var(--purple)">6</span>
+      <span class="htitle">これって何？安全なの？</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+
+      <div class="hq">Q. これはアプリ？ウイルスじゃないの？</div>
+      <div class="ha">
+        アプリではなく<strong>HTMLファイル</strong>です。ブラウザ（ChromeやSafari）で開くWebページと同じ仕組みで動いています。インストールは一切不要で、ウイルスソフトに引っかかるものも何も入っていません。<br><br>
+        <div style="background:var(--card2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);line-height:1.8;">
+          📄 index.html<br>
+          　└ ブラウザが読み取るテキストファイル<br>
+          　└ 中身はHTML・CSS・JavaScriptのみ<br>
+          　└ 外部サーバーへの接続：なし<br>
+          　└ 個人情報の送信：なし
+        </div>
+      </div>
+
+      <div class="hq">Q. 入力した情報はどこに保存されている？</div>
+      <div class="ha">
+        入力データは<strong>自分のブラウザの中だけ</strong>に保存されます。インターネットにも社外にも出ません。
+        <div style="margin:10px 0;background:var(--card2);border-radius:8px;padding:14px;font-size:12px;line-height:2;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:var(--gdim);color:var(--green);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;">保存される場所</span>
+          </div>
+          📱 あなたのスマホ・PC のブラウザ内<br>
+          　（「ローカルストレージ」という領域）<br><br>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <span style="background:var(--rdim);color:var(--red);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;">保存されない場所</span>
+          </div>
+          ❌ インターネット上のサーバー<br>
+          ❌ クラウド（OneDrive・iCloudなど）<br>
+          ❌ 他の人のスマホ・PC<br>
+          ❌ GitHub（HTMLファイルだけが置かれる）
+        </div>
+        つまり<strong>自分のブラウザを見られない限り、誰にも見えません。</strong>
+      </div>
+
+      <div class="hq">Q. Power Automateにはどんな情報が送られる？</div>
+      <div class="ha">
+        「登録する」ボタンを押したとき、<strong>自分のOutlookメール宛</strong>に予定の内容（日時・現場名・作業内容など）が送信されます。
+        <div style="margin:10px 0;background:var(--card2);border-radius:8px;padding:12px;font-size:12px;line-height:1.8;color:var(--text2);">
+          送信先：自分のOutlookアドレス（設定タブで入力したもの）<br>
+          送信内容：予定の日時・現場名・作業内容・メモ<br>
+          送信しないもの：パスワード・個人情報・端末情報
+        </div>
+        このメールをPower Automateが受け取って、Outlookカレンダーに自動で予定を登録します。<strong>社外には一切送られません。</strong>
+      </div>
+
+      <div class="hq">Q. GitHubに置くと情報が漏れない？</div>
+      <div class="ha">
+        漏れません。GitHubに置くのは<strong>ツールの本体（HTMLファイル）だけ</strong>で、お客さまや号機のデータは含まれていません。<br><br>
+        例えるなら、<strong>「Excelのファイルをドライブに置く」のではなく、「Excelのアプリ本体だけ置く」</strong>イメージです。データは各自の端末の中にあります。
+      </div>
+
+      <div class="hq">Q. ブラウザを変えたり機種変したらデータは？</div>
+      <div class="ha">
+        <strong>消えます。</strong>データはブラウザに紐づいているため、別のブラウザや端末では引き継がれません。<br>
+        機種変・ブラウザ変更の前に必ず「設定タブ → マスタをエクスポート」でバックアップを取ってください。
+      </div>
+
+      <div class="hq">Q. 会社のセキュリティ規定に引っかかる？</div>
+      <div class="ha">
+        以下の点で一般的な会社のセキュリティ規定に適合しやすい設計になっています：
+        <div style="margin-top:8px;font-size:12px;line-height:2;color:var(--text2);">
+          ✅ 外部サーバーへのデータ送信なし<br>
+          ✅ インストール不要（ブラウザで開くだけ）<br>
+          ✅ 社内Outlookのみ使用（Power Automate経由）<br>
+          ✅ Microsoft 365の機能のみ活用<br>
+          ✅ ソースコードが公開されており中身を確認可能
+        </div>
+        ただし会社によってポリシーが異なるため、心配な場合はIT部門への確認を推奨します。
+      </div>
+
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:16px 0 8px;font-size:11px;color:var(--text3);font-family:var(--mono);">v5.0 — 点検スケジューラ</div>
+</div>
+
+</div>
+
+<nav class="bnav">
+  <button class="ni active" id="nav-home" onclick="navTo('select')"><span class="ni-icon">🏠</span><span class="ni-lbl">ホーム</span><div class="ni-dot"></div></button>
+  <button class="ni" id="nav-meeting" onclick="navTo('meeting')"><span class="ni-icon">👥</span><span class="ni-lbl">会議</span><div class="ni-dot"></div></button>
+  <button class="ni" id="nav-inspection" onclick="navTo('inspection')"><span class="ni-icon">⚡</span><span class="ni-lbl">点検</span><div class="ni-dot"></div></button>
+  <button class="ni" id="nav-master" onclick="navTo('master')"><span class="ni-icon">⚙️</span><span class="ni-lbl">マスタ</span><div class="ni-dot"></div></button>
+  <button class="ni" id="nav-settings" onclick="navTo('settings')"><span class="ni-icon">📧</span><span class="ni-lbl">設定</span><div class="ni-dot"></div></button>
+  <button class="ni" id="nav-help" onclick="navTo('help')"><span class="ni-icon">❓</span><span class="ni-lbl">ヘルプ</span><div class="ni-dot"></div></button>
+</nav>
+
+
+<!-- Add customer modal -->
+<div class="mbg" id="modal-add-cust">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle">🏭 物件を追加</div>
+    <div class="field"><label>物件名<span class="req">*</span></label><input type="text" id="new-cust-name" placeholder="例：イオンモール茨木" oninput="updateBulkPreview1()"></div>
+    <div class="field">
+      <label>号機を一括追加（連番）</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="bulk-prefix" placeholder="機種名（例：ガスエンジン）" style="flex:1;min-width:130px;" oninput="updateBulkPreview1()">
+        <input type="number" id="bulk-from" placeholder="開始" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview1()">
+        <span style="color:var(--text3);font-size:13px;flex-shrink:0;">〜</span>
+        <input type="number" id="bulk-to" placeholder="終了" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview1()">
+        <span style="color:var(--text2);font-size:12px;flex-shrink:0;">号機</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">例：ガスエンジン・1〜3 → ガスエンジン１号機〜３号機</div>
+    </div>
+    <div class="field">
+      <label>個別に追加（カンマ区切り）</label>
+      <input type="text" id="manual-units" placeholder="例：ジェネリンク, ボイラ１号機" oninput="updateBulkPreview1()">
+    </div>
+    <div id="bulk-preview" style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent);font-family:var(--mono);margin-top:4px;min-height:36px;line-height:1.7;white-space:pre-wrap;"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" onclick="saveNewCust()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add units to existing customer modal -->
+<div class="mbg" id="modal-add-units">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle" id="add-units-title">⚡ 号機を追加</div>
+    <div class="field">
+      <label>一括追加（連番）</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="au-prefix" placeholder="機種名（例：ボイラ）" style="flex:1;min-width:130px;" oninput="updateBulkPreview2()">
+        <input type="number" id="au-from" placeholder="開始" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview2()">
+        <span style="color:var(--text3);font-size:13px;flex-shrink:0;">〜</span>
+        <input type="number" id="au-to" placeholder="終了" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview2()">
+        <span style="color:var(--text2);font-size:12px;flex-shrink:0;">号機</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">機種名を空欄にすると１号機・２号機…となります</div>
+    </div>
+    <div class="field">
+      <label>個別に追加（カンマ区切り）</label>
+      <input type="text" id="au-manual" placeholder="例：予備機, ジェネリンク" oninput="updateBulkPreview2()">
+    </div>
+    <div id="bulk-preview2" style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent);font-family:var(--mono);margin-top:4px;min-height:36px;line-height:1.7;white-space:pre-wrap;"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" onclick="saveNewUnits()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Irregular modal -->
+<div class="mbg" id="modal-irr">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle">✏️ イレギュラー現場</div>
+    <div class="field"><label>現場名</label><input type="text" id="irr-name" placeholder="例：○○株式会社"></div>
+    <div class="field"><label>号機（カンマ区切り）</label><input type="text" id="irr-units" placeholder="例：１号機, ２号機"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" onclick="applyIrr()">適用</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="mbg" id="modal-confirm">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle" id="confirm-title">📨 送信内容の確認</div>
+    <div id="confirm-body"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" id="confirm-ok" onclick="doConfirm()">送信</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let db={customers:[],units:[],partners:[],categories:[]};
+let cfg={email:'',pa:false,ics:true,company:'会社'};
+let iS={custId:null,custName:'',selUnits:[],irrNames:[],inspType:'定期点検',inspColor:'cb',assignType:'自社対応',assignAbbr:'',assignColor:'cb'};
+let mS={type:'社内会議',color:'cb'};
+let pending=null,pendingAction=null;
+
+function init(){
+  const s=localStorage.getItem('sched_v5');
+  if(s){try{const d=JSON.parse(s);db=d.db||db;cfg=d.cfg||cfg;}catch(e){}}
+  // 旧データとの互換性：存在しないフィールドを補完
+  if(!db.categories) db.categories=[];
+  if(!db.customers)  db.customers=[];
+  if(!db.units)      db.units=[];
+  if(!db.partners)   db.partners=[];
+  else{
+    db.categories=[
+      {id:'cat1',name:'点検・作業',color:'#3ddc84'},
+      {id:'cat2',name:'トラブル対応',color:'#ff4d6a'},
+      {id:'cat3',name:'会議',color:'#4d9fff'},
+      {id:'cat4',name:'社外打合せ',color:'#ff8c42'},
+      {id:'cat5',name:'移動',color:'#a78bfa'},
+      {id:'cat6',name:'有休',color:'#ffc233'},
+      {id:'cat7',name:'振替休日',color:'#ffc233'},
+      {id:'cat8',name:'休日出勤',color:'#ff8c42'},
+      {id:'cat9',name:'社内勤務',color:'#4d9fff'},
+    ];
+    db.customers=[{id:'c1',name:'大阪工業㈱'},{id:'c2',name:'神戸電機㈱'},{id:'c3',name:'尼崎製造㈱'}];
+    db.units=[{id:'u1',cid:'c1',name:'１号機'},{id:'u2',cid:'c1',name:'２号機'},{id:'u3',cid:'c1',name:'３号機'},{id:'u4',cid:'c2',name:'１号機'},{id:'u5',cid:'c2',name:'２号機'},{id:'u6',cid:'c3',name:'１号機'}];
+    db.partners=[{id:'p1',name:'○○電機サービス'},{id:'p2',name:'△△メンテナンス'}];
+    save();
+  }
+  const t=new Date().toISOString().split('T')[0];
+  document.getElementById('m-date').value=t;
+  document.getElementById('i-date').value=t;
+  document.getElementById('cfg-pa').checked=cfg.pa||false;
+  document.getElementById('cfg-ics').checked=cfg.ics!==false;
+  document.getElementById('cfg-email').value=cfg.email||'';
+  document.getElementById('cfg-company').value=cfg.company||'';
+  if(!cfg.company) cfg.company='会社';
+  document.getElementById('pa-addr-field').style.display=cfg.pa?'':'none';
+  updateBadge();renderCustSel();renderPartnerSel();renderCatChips();initSort();
+  renderSubmitButtons('m');renderSubmitButtons('i');
+}
+function save(){localStorage.setItem('sched_v5',JSON.stringify({db,cfg}));}
+function saveSettings(){
+  cfg.pa=document.getElementById('cfg-pa').checked;
+  cfg.ics=document.getElementById('cfg-ics').checked;
+  cfg.email=document.getElementById('cfg-email').value.trim();
+  cfg.company=document.getElementById('cfg-company').value.trim()||'会社';
+  document.getElementById('pa-addr-field').style.display=cfg.pa?'':'none';
+  save();updateBadge();renderSubmitButtons('m');renderSubmitButtons('i');
+}
+function updateBadge(){
+  const modes=[];if(cfg.pa)modes.push('PA');if(cfg.ics)modes.push('ICS');
+  document.getElementById('hdr-badge').textContent=modes.length?modes.join('+')+' 有効':'';
+}
+
+// ===== 件名生成ロジック =====
+function buildInspTitle(){
+  const cust=iS.custName||'';
+  const units=getUnitNames();
+  const insp=iS.inspType||'定期点検';
+  const abbr=iS.assignAbbr; // '委' or '同' or ''
+  const work=document.getElementById('i-work')?.value.trim()||'';
+
+  // [委/定期点検] or [定期点検]
+  // その他の場合は自由入力テキストをタグに使う
+  const otherText = document.getElementById('i-other-text')?.value.trim()||'';
+  const inspLabel = (insp==='その他'&&otherText) ? otherText : insp;
+  const tag=abbr?`[${abbr}/${inspLabel}]`:`[${inspLabel}]`;
+
+  // お客さま(１号機・２号機)
+  const unitStr=units.length?`(${units.join('・')})`:'';
+  const custPart=cust?`${cust}${unitStr}`:'';
+
+  // 作業内容
+  const workPart=work?` / ${work}`:'';
+
+  if(!custPart)return tag+(workPart||'');
+  return`${tag} ${custPart}${workPart}`;
+}
+
+function updateITitle(){
+  const title=buildInspTitle();
+  document.getElementById('i-title-preview').textContent=title||'入力すると自動生成されます';
+}
+
+function updateMTitle(){
+  // 会議は件名をそのまま使うだけなのでプレビューなし
+}
+
+// ===== Submit buttons =====
+function renderSubmitButtons(p){
+  const area=document.getElementById(p+'-submit-area');
+  if(!area) return;
+  const hasPa=cfg.pa,hasIcs=cfg.ics!==false;
+  let html='';
+  if(hasPa&&hasIcs){
+    html=`<div class="submit-label">登録方法を選択</div>
+      <div class="submit-row">
+        <button class="bsub bsub-pa" onclick="triggerSend('${p}','pa')">📨 メール送信<br><span style="font-size:10px;font-weight:400">Power Automate</span></button>
+        <button class="bsub bsub-ics" onclick="triggerSend('${p}','ics')">📥 ICS保存<br><span style="font-size:10px;font-weight:400">ダブルタップで登録</span></button>
+      </div>`;
+  } else if(hasPa){
+    html=`<button class="bsub bsub-pa" onclick="triggerSend('${p}','pa')">📨 Outlookに登録する</button>
+      <div class="submit-note">メールアプリが開きます → 送信ボタンを押すだけ</div>`;
+  } else {
+    html=`<button class="bsub bsub-ics" onclick="triggerSend('${p}','ics')">📥 ICSをダウンロード</button>
+      <div class="submit-note">ダウンロード後 → ダブルタップでOutlookに登録</div>`;
+  }
+  area.innerHTML=html;
+}
+
+// ===== Navigation =====
+const TITLES={select:'⚡ スケジューラ',meeting:'会議・打合せ',inspection:'発電機メンテ',attendance:'勤怠・休暇',master:'マスタ管理',settings:'設定',help:'ヘルプ'};
+const NAVMAP={select:'nav-home',meeting:'nav-meeting',inspection:'nav-inspection',attendance:'nav-home',master:'nav-master',settings:'nav-settings',help:'nav-help'};
+function navTo(id){
+  showScreen(id);
+  if(id==='master') renderMaster();
+  if(id==='settings'){renderCatMaster();renderCatChips();renderAllSortLists();}
+}
+function goForm(fid,sub){
+  if(fid==='inspection'){
+    // 振替休日リセット
+    furikaeDates=[];
+    renderFurikaeDates();
+    const hl=document.getElementById('i-holiday-list');
+    if(hl) hl.innerHTML='';
+    const ft=document.getElementById('i-furikae-tog');
+    if(ft){ ft.checked=false; document.getElementById('i-furikae-body').classList.remove('open'); document.getElementById('i-furikae-lbl').textContent='なし'; }
+  }
+  if(fid==='attendance'){
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('att-date').value=today;
+    document.getElementById('att-end-date').value='';
+    document.getElementById('att-memo').value='';
+    // 種別を有休にリセット
+    const chips=document.querySelectorAll('#att-type-chips .chip');
+    chips.forEach(c=>c.className='chip');
+    if(chips[0]) chips[0].classList.add('cb');
+    attState.type='有休'; attState.mode='allday';
+    document.getElementById('att-allday').checked=true;
+    document.getElementById('att-time-row').style.display='none';
+    selShowAs('att','free');
+    selCatAtt={id:'',name:'',color:''};
+    // 振替休日リセット
+    const ft=document.getElementById('att-furikae-tog');
+    if(ft){ft.checked=false;document.getElementById('att-furikae-body')?.classList.remove('open');document.getElementById('att-furikae-lbl').textContent='なし';}
+    renderSubmitButtons('att');
+    renderCatChips();
+    updateAttPreview();
+    showScreen('attendance');
+    return;
+  }
+  if(sub==='task'){setChipIdx('mt-chips',2,'co','個人タスク');document.getElementById('m-att-sec').style.display='none';}
+  else if(sub==='other'){setChipIdx('mt-chips',3,'cp','その他');document.getElementById('m-att-sec').style.display='';}
+  else{document.getElementById('m-att-sec').style.display='';}
+  showScreen(fid);
+}
+function goBack(){showScreen('select');}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('hdr-title').textContent=TITLES[id]||id;
+  document.getElementById('btn-back').classList.toggle('vis',id!=='select'&&id!=='master'&&id!=='settings'&&id!=='help');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const nid=NAVMAP[id];if(nid)document.getElementById(nid).classList.add('active');
+  document.getElementById('app-body').scrollTop=0;
+}
+
+// ===== Chips =====
+function selChip(gid,el,c,val){
+  document.querySelectorAll('#'+gid+' .chip').forEach(ch=>{ch.className='chip';});
+  el.classList.add(c);
+  if(gid==='mt-chips'){mS.type=val;mS.color=c;document.getElementById('m-att-sec').style.display=val==='個人タスク'?'none':'';}
+  if(gid==='i-insp'){
+    iS.inspType=val;iS.inspColor=c;
+    const isOther=val==='その他';
+    document.getElementById('i-other-field').style.display=isOther?'':'none';
+    if(!isOther)document.getElementById('i-other-text').value='';
+    updateITitle();
+  }
+}
+function setChipIdx(gid,idx,c,val){
+  const chips=document.querySelectorAll('#'+gid+' .chip');
+  chips.forEach(ch=>{ch.className='chip';});
+  if(chips[idx])chips[idx].classList.add(c);
+  mS.type=val;mS.color=c;
+}
+function selAssign(el,c,abbr,val){
+  document.querySelectorAll('#i-asgn .chip').forEach(ch=>{ch.className='chip';});
+  el.classList.add(c);
+  iS.assignType=val;iS.assignAbbr=abbr;iS.assignColor=c;
+  document.getElementById('i-pf').style.display=val.includes('協力')?'':'none';
+  // 委託のときは移動時間セクションを非表示
+  const travelSec = document.getElementById('i-travel-sec');
+  if(travelSec) travelSec.style.display = abbr==='委' ? 'none' : '';
+  if(abbr==='委'){ Object.keys(travelState).forEach(k=>{ travelState[k]=false; const ids={go:'i-tr-go',back:'i-tr-back',office:'i-tr-office',return:'i-tr-return'}; if(ids[k]) document.getElementById(ids[k])?.classList.remove('cb'); }); }
+  autoShowAs('i', abbr);
+  updateITitle();
+}
+
+// ===== Toggle =====
+function togPrep(p){
+  const on=document.getElementById(p+'-pt').checked;
+  document.getElementById(p+'-pb').classList.toggle('open',on);
+  document.getElementById(p+'-pl').textContent=on?'あり':'なし';
+  if(on)calcR(p);
+}
+
+// ===== Rows =====
+function addRow(lid,ph){
+  const d=document.createElement('div');d.className='lr';
+  d.innerHTML=`<input type="text" placeholder="${ph}"><button class="bdel" onclick="delRow(this)">×</button>`;
+  document.getElementById(lid).appendChild(d);
+}
+function delRow(btn){btn.parentElement.remove();}
+
+// ===== Customer/Unit =====
+function renderCustSel(){
+  const s=document.getElementById('i-cust'),c=s.value;
+  s.innerHTML='<option value="">— 選択 —</option>';
+  db.customers.forEach(cu=>{s.appendChild(new Option(cu.name,cu.id));});
+  if(c)s.value=c;
+}
+function renderPartnerSel(){
+  const s=document.getElementById('i-partner');
+  s.innerHTML='<option value="">— 選択 —</option>';
+  db.partners.forEach(p=>{s.appendChild(new Option(p.name,p.id));});
+}
+function onCustChange(){
+  const s=document.getElementById('i-cust');
+  iS.custId=s.value;iS.custName=s.options[s.selectedIndex]?.text||'';
+  iS.selUnits=[];iS.irrNames=[];renderUnitChips();updateITitle();
+}
+function renderUnitChips(){
+  const g=document.getElementById('i-ug');
+  if(!iS.custId){g.innerHTML='<span style="font-size:12px;color:var(--text3)">お客さまを選択してください</span>';return;}
+  const units=db.units.filter(u=>u.cid===iS.custId);
+  if(!units.length){g.innerHTML='<span style="font-size:12px;color:var(--text3)">号機が未登録（マスタ管理から追加）</span>';return;}
+  g.innerHTML='';
+  units.forEach(u=>{
+    const c=document.createElement('div');c.className='uc'+(iS.selUnits.includes(u.id)?' sel':'');
+    c.textContent=u.name;
+    c.onclick=()=>{
+      iS.selUnits.includes(u.id)?iS.selUnits=iS.selUnits.filter(x=>x!==u.id):iS.selUnits.push(u.id);
+      c.classList.toggle('sel');updateITitle();
+    };
+    g.appendChild(c);
+  });
+}
+function getUnitNames(){
+  return iS.selUnits.map(id=>{const irr=iS.irrNames.find(u=>u.id===id);return irr?irr.name:db.units.find(u=>u.id===id)?.name||'';}).filter(Boolean);
+}
+
+// ===== Irregular =====
+function openIrr(){document.getElementById('modal-irr').classList.add('open');}
+function closeModal(){document.querySelectorAll('.mbg').forEach(m=>m.classList.remove('open'));}
+function applyIrr(){
+  const name=document.getElementById('irr-name').value.trim();
+  const ur=document.getElementById('irr-units').value.trim();
+  if(!name){toast('⚠️ 現場名を入力してください');return;}
+  iS.custId='irr';iS.custName=name;iS.selUnits=[];iS.irrNames=[];
+  const g=document.getElementById('i-ug');g.innerHTML='';
+  if(ur){ur.split(/[,、，]/).map(s=>s.trim()).filter(Boolean).forEach((u,i)=>{
+    const id='irr_'+i;iS.selUnits.push(id);iS.irrNames.push({id,name:u});
+    const c=document.createElement('div');c.className='uc sel';c.textContent=u;
+    c.onclick=()=>{iS.selUnits.includes(id)?iS.selUnits=iS.selUnits.filter(x=>x!==id):iS.selUnits.push(id);c.classList.toggle('sel');updateITitle();};
+    g.appendChild(c);
+  });}
+  document.getElementById('i-cust').value='';
+  closeModal();updateITitle();toast('✅ イレギュラー現場を設定しました');
+}
+
+// ===== Reminder =====
+const DOW=['日','月','火','水','木','金','土'];
+function fmtD(d){if(!d)return'—';const[y,m,day]=d.split('-');return`${y}/${m}/${day}(${DOW[new Date(d).getDay()]})`;}
+function calcR(p){
+  const on=document.getElementById(p+'-pt').checked;if(!on)return;
+  const d=document.getElementById(p==='m'?'m-date':'i-date').value;
+  const days=parseInt(document.getElementById(p+'-pd').value)||1;
+  const time=document.getElementById(p+'-ptime').value||'09:00';
+  const box=document.getElementById(p+'-rbox');
+  if(!d){box.textContent='📅 日付を入力すると計算します';return;}
+  const rd=new Date(d);rd.setDate(rd.getDate()-days);
+  const rs=`${rd.getFullYear()}/${String(rd.getMonth()+1).padStart(2,'0')}/${String(rd.getDate()).padStart(2,'0')}`;
+  box.textContent=`⏰ ${rs}(${DOW[rd.getDay()]}) ${time}\n📋 事前準備リマインダー（${days}日前）`;
+}
+
+// ===== Build payloads =====
+function buildMeeting(){
+  const title=document.getElementById('m-title').value.trim();
+  const date=document.getElementById('m-date').value;
+  if(!title||!date){toast('⚠️ 件名と日付を入力してください');return null;}
+  const start=document.getElementById('m-start').value||'10:00';
+  const end=document.getElementById('m-end').value||'11:00';
+  const loc=document.getElementById('m-loc').value;
+  const agenda=document.getElementById('m-agenda').value;
+  const atts=Array.from(document.querySelectorAll('#m-att-rows input')).map(i=>i.value.trim()).filter(Boolean);
+  const prepOn=document.getElementById('m-pt').checked;
+  const todos=Array.from(document.querySelectorAll('#m-todo-rows input')).map(i=>i.value.trim()).filter(Boolean);
+  const pDays=parseInt(document.getElementById('m-pd').value)||1;
+  const pTime=document.getElementById('m-ptime').value||'09:00';
+  let prep='';
+  if(prepOn&&date){const rd=new Date(date);rd.setDate(rd.getDate()-pDays);prep=`${rd.getFullYear()}-${String(rd.getMonth()+1).padStart(2,'0')}-${String(rd.getDate()).padStart(2,'0')}T${pTime}:00+09:00`;}
+  const memo=[agenda?'【議題】\n'+agenda:'',atts.length?'【参加者】'+atts.join('、'):'',todos.length?'【事前準備】\n'+todos.map(t=>'☐ '+t).join('\n'):''].filter(Boolean).join('\n\n');
+  const mCat=selCatM.name||mS.type;
+  return{title:`[${mS.type}] ${title}`,start:`${date}T${start}:00+09:00`,end:`${date}T${end}:00+09:00`,location:loc,category:mCat,showAs:showAsM,units:'',assign:'',prep,memo,travelEvents:[],rrule:'',isAllday:false,furikaeEvent:null,furikaeEvents:[],travelGoStart:'',travelGoEnd:'',travelGoMemo:'',travelBackStart:'',travelBackEnd:'',travelBackMemo:'',travelOfficeStart:'',travelOfficeEnd:'',travelReturnStart:'',travelReturnEnd:'',travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:''};
+}
+
+function buildInspection(){
+  const date=document.getElementById('i-date').value;
+  if(!date){toast('⚠️ 作業日を入力してください');return null;}
+  if(!iS.custName){toast('⚠️ お客さまを選択してください');return null;}
+  const endDate=document.getElementById('i-edate').value||date;
+  const start=document.getElementById('i-start').value||'09:00';
+  const end=document.getElementById('i-end').value||'17:00';
+  const memo=document.getElementById('i-memo').value;
+  const work=document.getElementById('i-work').value.trim();
+  const prepOn=document.getElementById('i-pt').checked;
+  const todos=Array.from(document.querySelectorAll('#i-todo-rows input')).map(i=>i.value.trim()).filter(Boolean);
+  const pDays=parseInt(document.getElementById('i-pd').value)||3;
+  const pTime=document.getElementById('i-ptime').value||'09:00';
+  const units=getUnitNames();
+  const pSel=document.getElementById('i-partner').value;
+  const pName=pSel?db.partners.find(p=>p.id===pSel)?.name||'':'';
+  const assign=pName?`${iS.assignType}（${pName}）`:iS.assignType;
+  let prep='';
+  if(prepOn&&date){const rd=new Date(date);rd.setDate(rd.getDate()-pDays);prep=`${rd.getFullYear()}-${String(rd.getMonth()+1).padStart(2,'0')}-${String(rd.getDate()).padStart(2,'0')}T${pTime}:00+09:00`;}
+
+  // 件名生成
+  const title=buildInspTitle();
+
+  const memoFull=[
+    `【種別】${(iS.inspType==='その他'&&(document.getElementById('i-other-text')?.value.trim()||''))?document.getElementById('i-other-text').value.trim():iS.inspType}`,
+    `【担当】${assign}`,
+    units.length?`【号機】${units.join('・')}` : '',
+    work?`【作業内容】${work}`:'',
+    todos.length?'【事前準備】\n'+todos.map(t=>'☐ '+t).join('\n'):'',
+    memo?'【備考】\n'+memo:''
+  ].filter(Boolean).join('\n');
+
+  const otherTxt=document.getElementById('i-other-text')?.value.trim()||'';
+  const catLabel=selCatI.name||(iS.inspType==='その他'&&otherTxt?otherTxt:iS.inspType);
+  // travel events
+  const travelMin = parseInt(document.getElementById('i-travel-min')?.value)||60;
+  const travelEvents = buildTravelEvents(date, start, end, iS.custName, travelMin);
+  // recurrence
+  const recOn = document.getElementById('i-rec-tog')?.checked;
+  const recEnd = document.getElementById('i-rec-end')?.value;
+  const rrule = recOn && recEnd ? `FREQ=${recPattern};UNTIL=${recEnd.replace(/-/g,'')}T235959Z` : '';
+  // Power Automate向けにフラット化（各パターンのstart/endを個別フィールドで渡す）
+  const teGo     = travelEvents.find(e=>e.fromTo==='go');
+  const teBack   = travelEvents.find(e=>e.fromTo==='back');
+  const teOffice = travelEvents.find(e=>e.fromTo==='office');
+  const teReturn = travelEvents.find(e=>e.fromTo==='return');
+  const teSite   = travelEvents.find(e=>e.fromTo==='site');
+  // 振替休日（複数日対応）
+  const iFurikaeOn = document.getElementById('i-furikae-tog')?.checked;
+  const pZ2 = n=>String(n).padStart(2,'0');
+  const iFurikaeEvents = [];
+  if(iFurikaeOn && furikaeDates.length){
+    furikaeDates.forEach(fd=>{
+      const fdObj  = new Date(fd);
+      const fedObj = new Date(fd); fedObj.setDate(fedObj.getDate()+1);
+      iFurikaeEvents.push({
+        title: '振替休日',
+        start: fd.replace(/-/g,''),
+        end:   `${fedObj.getFullYear()}${pZ2(fedObj.getMonth()+1)}${pZ2(fedObj.getDate())}`,
+        memo:  `${date.replace(/-/g,'/')}（${iS.custName} ${iS.inspType}）の振替`,
+      });
+    });
+  }
+  // 旧単一フィールドとの互換性
+  const iFurikaeEvent = iFurikaeEvents.length ? iFurikaeEvents[0] : null;
+  return{
+    title, start:`${date}T${start}:00+09:00`, end:`${endDate}T${end}:00+09:00`,
+    location:iS.custName, category:catLabel, showAs:showAsI,
+    units:units.join('・'), assign, work, prep, memo:memoFull, rrule,
+    furikaeEvent: iFurikaeEvent,
+    furikaeEvents: iFurikaeEvents,
+    travelLabel: iS.custName,
+    travelGoStart:     teGo     ? teGo.start     : '',
+    travelGoEnd:       teGo     ? teGo.end       : '',
+    travelGoMemo:      teGo     ? teGo.memo      : '',
+    travelBackStart:   teBack   ? teBack.start   : '',
+    travelBackEnd:     teBack   ? teBack.end     : '',
+    travelBackMemo:    teBack   ? teBack.memo    : '',
+    travelOfficeStart: teOffice ? teOffice.start : '',
+    travelOfficeEnd:   teOffice ? teOffice.end   : '',
+    travelReturnStart: teReturn ? teReturn.start : '',
+    travelReturnEnd:   teReturn ? teReturn.end   : '',
+    travelSiteTitle:   teSite   ? teSite.title   : '',
+    travelSiteStart:   teSite   ? teSite.start   : '',
+    travelSiteEnd:     teSite   ? teSite.end     : '',
+    travelEvents, // ICS用
+  };
+}
+
+// ===== Trigger & Confirm =====
+function triggerSend(formType,action){
+  if(action==='pa'&&!cfg.email){toast('⚠️ 設定タブでメールアドレスを入力してください');navTo('settings');return;}
+  const p=formType==='meeting'?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():buildInspection();
+  if(!p)return;
+  pending=p;pendingAction=action;
+  const isPA=action==='pa';
+  document.getElementById('confirm-title').textContent=isPA?'📨 送信内容の確認':'📥 ICS登録内容の確認';
+  document.getElementById('confirm-ok').textContent=isPA?'メールを開く →':'ダウンロード';
+  // 日時表示（終日イベント対応）
+  function safeTime(dt){ return dt&&dt.includes('T') ? dt.split('T')[1].slice(0,5) : '終日'; }
+  function safeDate(dt){ return dt ? (dt.includes('T') ? dt.split('T')[0] : dt) : ''; }
+  const dtStr = p.isAllday
+    ? `${fmtD(safeDate(p.start))}　終日`
+    : `${fmtD(safeDate(p.start))} ${safeTime(p.start)}〜${safeTime(p.end)}`;
+  const prepStr = p.prep && p.prep.includes('T')
+    ? `📋 ${fmtD(p.prep.split('T')[0])} ${p.prep.split('T')[1].slice(0,5)}`
+    : '';
+  document.getElementById('confirm-body').innerHTML=`
+    <div class="crow"><span class="clbl">件名</span><span class="cval" style="color:var(--accent);font-family:var(--mono);font-size:12px">${he(p.title)}</span></div>
+    <div class="crow"><span class="clbl">日時</span><span class="cval">${dtStr}</span></div>
+    ${p.location?`<div class="crow"><span class="clbl">場所</span><span class="cval">${he(p.location)}</span></div>`:''}
+    ${prepStr?`<div class="crow"><span class="clbl">準備期限</span><span class="cval">${prepStr}</span></div>`:''}
+    ${p.furikaeEvents&&p.furikaeEvents.length?`<div class="crow"><span class="clbl">振替休日</span><span class="cval">${p.furikaeEvents.length}日分</span></div>`:''}
+    ${p.travelEvents&&p.travelEvents.length?`<div class="crow"><span class="clbl">移動予定</span><span class="cval">${p.travelEvents.map(t=>t.title).join('、')}</span></div>`:''}
+    ${isPA?`<div class="crow"><span class="clbl">送信先</span><span class="cval" style="color:var(--accent)">${he(cfg.email)}</span></div>`:''}
+  `;
+  document.getElementById('modal-confirm').classList.add('open');
+}
+function doConfirm(){if(!pending)return;if(pendingAction==='pa')doMailto();else doICS();closeModal();}
+
+// ===== Power Automate =====
+function doMailto(){
+  const p=pending;
+  const subject=encodeURIComponent('SCHED: '+p.title);
+  const body=encodeURIComponent(JSON.stringify(p,null,2));
+  window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
+  toast('✅ メールアプリが開きます。送信ボタンを押してください！');
+}
+
+// ===== ICS =====
+function pZ(n){return String(n).padStart(2,'0');}
+function toICS(dt){const[date,time]=dt.split('T');const[y,m,d]=date.split('-');const t=(time||'00:00').replace(/[+\-]\d{2}:\d{2}$/,'');const[h,min]=t.split(':');return`${y}${m}${d}T${h}${min}00`;}
+function uid(){return`s${Date.now()}${Math.random().toString(36).slice(2)}`;}
+function escICS(s){return(s||'').replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');}
+function stamp(){const n=new Date();return`${n.getFullYear()}${pZ(n.getMonth()+1)}${pZ(n.getDate())}T${pZ(n.getHours())}${pZ(n.getMinutes())}${pZ(n.getSeconds())}Z`;}
+function doICS(){
+  const p=pending;
+  const pZ2=n=>String(n).padStart(2,'0');
+  const freeOrBusy=sa=>(sa==='free'?'FREE':sa==='tentative'?'TENTATIVE':'BUSY');
+  function makeEvent(title, start, end, desc, loc, showAs, rrule){
+    let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(end)}\r\nSUMMARY:${escICS(title)}\r\n`;
+    if(loc) ev+=`LOCATION:${escICS(loc)}\r\n`;
+    if(desc) ev+=`DESCRIPTION:${escICS(desc)}\r\n`;
+    if(showAs) ev+=`TRANSP:${showAs==='free'||showAs==='tentative'?'TRANSPARENT':'OPAQUE'}\r\n`;
+    if(rrule) ev+=`RRULE:${rrule}\r\n`;
+    ev+=`BEGIN:VALARM\r\nTRIGGER:-PT30M\r\nACTION:DISPLAY\r\nDESCRIPTION:${escICS(title)}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+    return ev;
+  }
+  let ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Scheduler//JP\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n`;
+  // タイムゾーン定義（Asia/Tokyo JST+9）
+  ics+=`BEGIN:VTIMEZONE\r\nTZID:Asia/Tokyo\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0900\r\nTZOFFSETTO:+0900\r\nTZNAME:JST\r\nDTSTART:19700101T000000\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n`;
+  if(p.isAllday){
+    // 終日イベント
+    const sDate=p.start.replace(/-/g,'');
+    const eDate=p.end.replace(/-/g,'');
+    let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${sDate}\r\nDTEND;VALUE=DATE:${eDate}\r\nSUMMARY:${escICS(p.title)}\r\n`;
+    if(p.category) ev+=`CATEGORIES:${escICS(p.category)}\r\n`;
+    if(p.memo) ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
+    ev+=`TRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+    ics+=ev;
+  } else {
+    ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'');
+  }
+  if(p.prep){
+    const prepEnd=p.prep.replace(/T(\d{2}):(\d{2})/,(m,h,min)=>`T${h}:${String(parseInt(min)+30).padStart(2,'0')}`);
+    ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', '', '');
+  }
+  // travel events
+  if(p.travelEvents&&p.travelEvents.length){
+    p.travelEvents.forEach(te=>{
+      ics+=makeEvent(te.title, te.start, te.end, te.memo||'', '', 'free', '');
+    });
+  }
+  // 振替休日（複数対応）
+  const furikaeList = p.furikaeEvents && p.furikaeEvents.length ? p.furikaeEvents : (p.furikaeEvent ? [p.furikaeEvent] : []);
+  furikaeList.forEach(fe=>{
+    ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo)}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+  });
+  ics+=`END:VCALENDAR`;
+  const b=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`${p.title.replace(/[/\\:*?"<>|]/g,'_').slice(0,50)}.ics`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast('✅ ダウンロード完了！ダブルタップでOutlookに登録されます');
+}
+
+function he(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ===== Master =====
+function renderMaster(){
+  renderMasterAccordion();
+  const pl=document.getElementById('m-pl2');pl.innerHTML='';
+  db.partners.forEach(p=>{const li=document.createElement('li');li.className='mi';li.innerHTML=`<div class="mdot" style="background:var(--orange)"></div><span class="mn">${p.name}</span><button class="mdel" onclick="delPartner('${p.id}')">✕</button>`;pl.appendChild(li);});
+  renderCustSel();renderPartnerSel();
+}
+// addCust replaced by openAddCust/saveNewCust
+function delCust(id){if(!confirm('このお客さまと号機も削除されます。よろしいですか？'))return;db.customers=db.customers.filter(c=>c.id!==id);db.units=db.units.filter(u=>u.cid!==id);save();renderMaster();}
+function addUnit(){/* replaced by openAddUnits modal */}
+function delUnit(id){db.units=db.units.filter(u=>u.id!==id);save();renderMaster();}
+function addPartner(){const n=document.getElementById('add-pt').value.trim();if(!n)return;db.partners.push({id:'p'+Date.now(),name:n});document.getElementById('add-pt').value='';save();renderMaster();toast('✅ 追加しました');}
+function delPartner(id){db.partners=db.partners.filter(p=>p.id!==id);save();renderMaster();}
+function exportData(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='scheduler_master.json';a.click();toast('✅ エクスポートしました');}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{db=JSON.parse(ev.target.result);save();renderMaster();toast('✅ インポートしました');}catch{toast('⚠️ ファイルが不正です');}};r.readAsText(f);}
+
+// ===== Accordion Master =====
+let addUnitsCustId = null;
+
+function renderMasterAccordion(){
+  const acc = document.getElementById('m-cust-accordion');
+  if(!acc) return;
+  if(!db.customers.length){
+    acc.innerHTML = '<div style="text-align:center;padding:24px;font-size:13px;color:var(--text3);">物件がまだありません<br>「＋ 物件を追加」から追加してください</div>';
+    return;
+  }
+  acc.innerHTML = '';
+  db.customers.forEach(c => {
+    const units = db.units.filter(u => u.cid === c.id);
+    const card = document.createElement('div');
+    card.className = 'msec';
+    card.style.marginBottom = '8px';
+    card.innerHTML = `
+      <button class="sh macc-head" style="width:100%;cursor:pointer;background:none;border:none;text-align:left;" onclick="togMacc(this)">
+        <div style="display:flex;align-items:center;gap:10px;width:100%;">
+          <div class="mdot" style="background:var(--accent);flex-shrink:0"></div>
+          <span style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${c.name}</span>
+          <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">${units.length}台</span>
+          <span class="macc-arr" style="font-size:18px;color:var(--text3);transition:transform .2s">›</span>
+        </div>
+      </button>
+      <div class="macc-body" style="display:none;border-top:1px solid var(--border);">
+        <div class="ml macc-units" id="units-${c.id}"></div>
+        <div style="display:flex;gap:8px;padding:10px 16px;border-top:1px solid var(--border);">
+          <button class="bmadd" style="flex:1;padding:9px;" onclick="openAddUnits('${c.id}','${c.name}')">＋ 号機を追加</button>
+          <button class="bmadd" style="padding:9px 14px;background:var(--rdim);border-color:rgba(255,77,106,.3);color:var(--red);" onclick="delCust('${c.id}')">物件を削除</button>
+        </div>
+      </div>`;
+    acc.appendChild(card);
+    // render units
+    const ul = card.querySelector('.macc-units');
+    units.forEach(u => {
+      const li = document.createElement('li');
+      li.className = 'mi';
+      li.innerHTML = `<div class="mdot" style="background:var(--green)"></div><span class="mn">${u.name}</span><button class="mdel" onclick="delUnit('${u.id}')">✕</button>`;
+      ul.appendChild(li);
+    });
+    if(!units.length){
+      const li = document.createElement('li');
+      li.className = 'mi';
+      li.innerHTML = '<span style="font-size:12px;color:var(--text3)">号機が未登録です</span>';
+      ul.appendChild(li);
+    }
+  });
+}
+
+function togMacc(btn){
+  const body = btn.nextElementSibling;
+  const arr = btn.querySelector('.macc-arr');
+  const open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  arr.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function openAddCust(){
+  ['new-cust-name','bulk-prefix','bulk-from','bulk-to','manual-units'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('bulk-preview').textContent='';
+  document.getElementById('modal-add-cust').classList.add('open');
+}
+
+function buildUnitNames(prefix, from, to, manual){
+  const nums = ['０','１','２','３','４','５','６','７','８','９'];
+  function toZen(n){ return String(n).split('').map(c=>nums[parseInt(c)]||c).join(''); }
+  const names = [];
+  if(!isNaN(from) && !isNaN(to) && from <= to){
+    for(let i=from; i<=to; i++){
+      names.push((prefix ? prefix : '') + toZen(i) + '号機');
+    }
+  }
+  if(manual){
+    manual.split(/[,、，]/).map(s=>s.trim()).filter(Boolean).forEach(n=>names.push(n));
+  }
+  return names;
+}
+
+function updateBulkPreview1(){
+  const prefix = document.getElementById('bulk-prefix').value.trim();
+  const from = parseInt(document.getElementById('bulk-from').value);
+  const to   = parseInt(document.getElementById('bulk-to').value);
+  const manual = document.getElementById('manual-units').value.trim();
+  const names = buildUnitNames(prefix, from, to, manual);
+  const prev = document.getElementById('bulk-preview');
+  prev.textContent = names.length ? '追加予定：\n' + names.join('、') : '';
+}
+
+function updateBulkPreview2(){
+  const prefix = document.getElementById('au-prefix').value.trim();
+  const from = parseInt(document.getElementById('au-from').value);
+  const to   = parseInt(document.getElementById('au-to').value);
+  const manual = document.getElementById('au-manual').value.trim();
+  const names = buildUnitNames(prefix, from, to, manual);
+  const prev = document.getElementById('bulk-preview2');
+  prev.textContent = names.length ? '追加予定：\n' + names.join('、') : '';
+}
+
+function saveNewCust(){
+  const name = document.getElementById('new-cust-name').value.trim();
+  if(!name){ toast('⚠️ 物件名を入力してください'); return; }
+  const prefix = document.getElementById('bulk-prefix').value.trim();
+  const from = parseInt(document.getElementById('bulk-from').value);
+  const to   = parseInt(document.getElementById('bulk-to').value);
+  const manual = document.getElementById('manual-units').value.trim();
+  const unitNames = buildUnitNames(prefix, from, to, manual);
+  const cid = 'c'+Date.now();
+  db.customers.push({id:cid, name});
+  unitNames.forEach((n,i)=>{
+    db.units.push({id:'u'+(Date.now()+i), cid, name:n});
+  });
+  save(); closeModal(); renderMaster();
+  const msg = unitNames.length ? `✅ ${name}を追加しました（${unitNames.length}件）` : `✅ ${name}を追加しました`;
+  toast(msg);
+}
+
+function openAddUnits(cid, cname){
+  addUnitsCustId = cid;
+  document.getElementById('add-units-title').textContent = `⚡ ${cname} に号機を追加`;
+  ['au-prefix','au-from','au-to','au-manual'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('bulk-preview2').textContent='';
+  document.getElementById('modal-add-units').classList.add('open');
+}
+
+function saveNewUnits(){
+  if(!addUnitsCustId){ closeModal(); return; }
+  const prefix = document.getElementById('au-prefix').value.trim();
+  const from = parseInt(document.getElementById('au-from').value);
+  const to   = parseInt(document.getElementById('au-to').value);
+  const manual = document.getElementById('au-manual').value.trim();
+  const names = buildUnitNames(prefix, from, to, manual);
+  if(!names.length){ toast('⚠️ 号機名を入力してください'); return; }
+  names.forEach((n,i)=>{
+    db.units.push({id:'u'+(Date.now()+i), cid:addUnitsCustId, name:n});
+  });
+  save(); closeModal(); renderMaster();
+  toast(`✅ 号機を${names.length}件追加しました`);
+}
+
+// ===== Attendance =====
+let attState = {type:'有休', mode:'allday'};
+let showAsAtt = 'busy';
+
+const ATT_DEFAULTS = {
+  '有休':     {mode:'allday', start:'09:00', end:'18:00', showAs:'free'},
+  '午前半休': {mode:'half',   start:'09:00', end:'13:00', showAs:'busy'},
+  '午後半休': {mode:'half',   start:'13:00', end:'18:00', showAs:'busy'},
+  '振替休日': {mode:'allday', start:'09:00', end:'18:00', showAs:'free'},
+  '社内勤務': {mode:'work',   start:'09:00', end:'18:00', showAs:'busy'},
+  '休日出勤': {mode:'work',   start:'09:00', end:'18:00', showAs:'busy'},
+};
+
+function selAttType(el, type, mode){
+  document.querySelectorAll('#att-type-chips .chip').forEach(c=>c.className='chip');
+  el.classList.add('cb');
+  attState.type = type;
+  attState.mode = mode;
+  const def = ATT_DEFAULTS[type];
+  if(def){
+    const isAllday = mode==='allday';
+    document.getElementById('att-allday').checked = isAllday;
+    document.getElementById('att-time-row').style.display = isAllday ? 'none' : '';
+    document.getElementById('att-start').value = def.start;
+    document.getElementById('att-end').value   = def.end;
+    selShowAs('att', def.showAs);
+  }
+  // 休日出勤のとき振替休日セクションを表示
+  const furikaeSec = document.getElementById('att-furikae-sec');
+  if(furikaeSec) furikaeSec.style.display = type==='休日出勤' ? '' : 'none';
+  if(type!=='休日出勤'){
+    const tog = document.getElementById('att-furikae-tog');
+    if(tog){ tog.checked=false; document.getElementById('att-furikae-body').classList.remove('open'); document.getElementById('att-furikae-lbl').textContent='なし'; }
+  }
+  updateAttPreview();
+}
+
+function togInspFurikae(){
+  const on = document.getElementById('i-furikae-tog').checked;
+  document.getElementById('i-furikae-body').classList.toggle('open', on);
+  document.getElementById('i-furikae-lbl').textContent = on ? 'あり' : 'なし';
+  if(on) scanHolidays(); // 開いたら自動スキャン
+}
+
+// ===== 振替休日スキャン =====
+let furikaeDates = []; // 追加済み振替休日リスト
+let jpHolidays   = {}; // {YYYY-MM-DD: '祝日名'}
+
+async function loadJpHolidays(){
+  if(Object.keys(jpHolidays).length > 0) return; // キャッシュあり
+  try {
+    const res = await fetch('https://holidays-jp.github.io/api/v1/date.json');
+    jpHolidays = await res.json();
+  } catch(e) {
+    jpHolidays = {}; // オフライン時は空
+  }
+}
+
+async function scanHolidays(){
+  const startDate = document.getElementById('i-date').value;
+  const endDate   = document.getElementById('i-edate').value || startDate;
+  if(!startDate){ toast('⚠️ 作業日を入力してください'); return; }
+
+  const btn = document.querySelector('#i-furikae-scan button');
+  if(btn){ btn.textContent = '🔍 検索中...'; btn.disabled = true; }
+
+  await loadJpHolidays();
+
+  const list   = document.getElementById('i-holiday-list');
+  const DOW    = ['日','月','火','水','木','金','土'];
+  const found  = [];
+  let cur = new Date(startDate);
+  const end = new Date(endDate);
+
+  while(cur <= end){
+    const dow  = cur.getDay();
+    const ymd  = `${cur.getFullYear()}-${String(cur.getMonth()+1).padStart(2,'0')}-${String(cur.getDate()).padStart(2,'0')}`;
+    const hName = jpHolidays[ymd];
+    if(dow===0 || dow===6 || hName){
+      const label = hName || (dow===0?'日曜日':'土曜日');
+      found.push({date:ymd, label, dow:DOW[dow]});
+    }
+    cur.setDate(cur.getDate()+1);
+  }
+
+  if(btn){ btn.textContent = '🔍 作業期間内の土日祝を再検索'; btn.disabled = false; }
+
+  if(!found.length){
+    list.innerHTML = '<div style="font-size:12px;color:var(--text3);">土日祝はありませんでした</div>';
+    return;
+  }
+
+  list.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:8px;font-family:var(--mono);">${found.length}日の土日祝が見つかりました</div>`;
+  found.forEach(f=>{
+    const already = furikaeDates.includes(f.date);
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:6px;';
+    row.innerHTML = `
+      <span style="font-size:12px;color:var(--text2);flex:1;">${f.date.replace(/-/g,'/')}(${f.dow}) ${f.label}</span>
+      <button onclick="addFurikaeDate('${f.date}')" id="fbtn-${f.date}"
+        style="background:${already?'var(--gdim)':'var(--adim)'};border:1px solid ${already?'var(--green)':'rgba(77,159,255,.3)'};border-radius:8px;padding:5px 12px;font-size:11px;color:${already?'var(--green)':'var(--accent)'};cursor:pointer;font-family:var(--mono);white-space:nowrap;">
+        ${already?'✅ 追加済':'＋ 追加'}
+      </button>`;
+    list.appendChild(row);
+  });
+}
+
+function addFurikaeDate(date){
+  if(!date){ toast('⚠️ 日付を選択してください'); return; }
+  if(furikaeDates.includes(date)){
+    // 既にある場合は削除
+    furikaeDates = furikaeDates.filter(d=>d!==date);
+    toast('振替休日を削除しました');
+  } else {
+    furikaeDates.push(date);
+    furikaeDates.sort();
+    toast(`✅ ${date.replace(/-/g,'/')} を追加しました`);
+  }
+  renderFurikaeDates();
+  // スキャンリストのボタンも更新
+  const btn = document.getElementById('fbtn-'+date);
+  if(btn){
+    const added = furikaeDates.includes(date);
+    btn.style.background = added?'var(--gdim)':'var(--adim)';
+    btn.style.borderColor = added?'var(--green)':'rgba(77,159,255,.3)';
+    btn.style.color = added?'var(--green)':'var(--accent)';
+    btn.textContent = added?'✅ 追加済':'＋ 追加';
+  }
+}
+
+function renderFurikaeDates(){
+  const container = document.getElementById('i-furikae-added');
+  const lbl = document.getElementById('i-furikae-lbl');
+  if(!furikaeDates.length){
+    container.innerHTML = '';
+    lbl.textContent = 'なし';
+    return;
+  }
+  lbl.textContent = `${furikaeDates.length}日`;
+  const DOW = ['日','月','火','水','木','金','土'];
+  container.innerHTML = `<div style="font-size:11px;color:var(--text2);margin-bottom:6px;font-family:var(--mono);">登録予定の振替休日</div>`;
+  furikaeDates.forEach(d=>{
+    const dow = new Date(d).getDay();
+    const tag = document.createElement('div');
+    tag.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:4px;';
+    tag.innerHTML = `
+      <span style="background:var(--ydim);border:1px solid rgba(255,194,51,.3);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--yellow);font-family:var(--mono);">🔄 ${d.replace(/-/g,'/')}(${DOW[dow]})</span>
+      <button onclick="addFurikaeDate('${d}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;">✕</button>`;
+    container.appendChild(tag);
+  });
+}
+
+function togFurikae(){
+  const on = document.getElementById('att-furikae-tog').checked;
+  document.getElementById('att-furikae-body').classList.toggle('open', on);
+  document.getElementById('att-furikae-lbl').textContent = on ? 'あり' : 'なし';
+}
+
+function togAttAllday(){
+  const on = document.getElementById('att-allday').checked;
+  document.getElementById('att-time-row').style.display = on ? 'none' : '';
+  updateAttPreview();
+}
+
+function updateAttPreview(){
+  const date    = document.getElementById('att-date').value;
+  const endDate = document.getElementById('att-end-date').value;
+  const allday  = document.getElementById('att-allday').checked;
+  const start   = document.getElementById('att-start').value;
+  const end     = document.getElementById('att-end').value;
+  const type    = attState.type;
+  const DOW     = ['日','月','火','水','木','金','土'];
+
+  let title = type;
+  let dateStr = '';
+  if(date){
+    const d = new Date(date);
+    dateStr = `${date.replace(/-/g,'/')}(${DOW[d.getDay()]})`;
+    if(endDate && endDate !== date){
+      const ed = new Date(endDate);
+      dateStr += ` 〜 ${endDate.replace(/-/g,'/')}(${DOW[ed.getDay()]})`;
+      title = `${type}`;
+    }
+  }
+  const timeStr = allday ? '終日' : `${start}〜${end}`;
+  const preview = date ? `${title}
+${dateStr}　${timeStr}` : `${title}
+日付を入力してください`;
+  document.getElementById('att-title-preview').textContent = preview;
+}
+
+function buildAttendance(){
+  const date    = document.getElementById('att-date').value;
+  if(!date){ toast('⚠️ 日付を入力してください'); return null; }
+  const endDate = document.getElementById('att-end-date').value || date;
+  const allday  = document.getElementById('att-allday').checked;
+  const startT  = document.getElementById('att-start').value || '09:00';
+  const endT    = document.getElementById('att-end').value   || '18:00';
+  const memo    = document.getElementById('att-memo').value;
+  const type    = attState.type;
+  const catLabel= selCatAtt.name || type;
+
+  let startDT, endDT;
+  if(allday){
+    // 終日イベント：ICS用にDATEフォーマット、終了日は翌日
+    startDT = date;
+    const ed = new Date(endDate); ed.setDate(ed.getDate()+1);
+    endDT = `${ed.getFullYear()}-${String(ed.getMonth()+1).padStart(2,'0')}-${String(ed.getDate()).padStart(2,'0')}`;
+  } else {
+    startDT = `${date}T${startT}:00+09:00`;
+    endDT   = `${endDate}T${endT}:00+09:00`;
+  }
+  // 振替休日
+  const furikaeOn   = document.getElementById('att-furikae-tog')?.checked;
+  const furikaeDate = document.getElementById('att-furikae-date')?.value;
+  let furikaeEvent  = null;
+  if(furikaeOn && furikaeDate){
+    const fd  = new Date(furikaeDate);
+    const fed = new Date(furikaeDate); fed.setDate(fed.getDate()+1);
+    const pZ  = n=>String(n).padStart(2,'0');
+    furikaeEvent = {
+      title:'振替休日',
+      start: furikaeDate.replace(/-/g,''),
+      end:   `${fed.getFullYear()}${pZ(fed.getMonth()+1)}${pZ(fed.getDate())}`,
+      isAllday: true,
+      memo:`${date.replace(/-/g,'/')}（${type}）の振替`,
+      category: selCatAtt.name||'振替休日',
+      showAs:'free',
+    };
+  }
+  return{title:type, start:startDT, end:endDT, location:'', category:catLabel,
+         showAs:showAsAtt, units:'', assign:'', work:'', prep:'', memo,
+         travelEvents:[], rrule:'', isAllday:allday, furikaeEvent,
+         furikaeEvents: furikaeEvent ? [furikaeEvent] : [],
+         travelGoStart:'',travelGoEnd:'',travelGoMemo:'',
+         travelBackStart:'',travelBackEnd:'',travelBackMemo:'',
+         travelOfficeStart:'',travelOfficeEnd:'',
+         travelReturnStart:'',travelReturnEnd:'',
+         travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',
+         travelLabel:''};
+}
+
+// ===== Travel =====
+const travelState = {go:false, back:false, office:false, return:false};
+
+function togTravel(dir){
+  travelState[dir] = !travelState[dir];
+  const ids = {go:'i-tr-go', back:'i-tr-back', office:'i-tr-office', return:'i-tr-return'};
+  document.getElementById(ids[dir])?.classList.toggle('cb', travelState[dir]);
+}
+
+function buildTravelEvents(baseDate, startTime, endTime, custName, travelMin){
+  const events = [];
+  const pZ = n => String(n).padStart(2,'0');
+  const company = cfg.company || '会社';
+  function addMins(dateStr, timeStr, mins){
+    const [y,m,d] = dateStr.split('-');
+    const [h, mn] = timeStr.split(':').map(Number);
+    const dt = new Date(Number(y), Number(m)-1, Number(d), h, mn);
+    dt.setMinutes(dt.getMinutes() + mins);
+    return `${dt.getFullYear()}-${pZ(dt.getMonth()+1)}-${pZ(dt.getDate())}T${pZ(dt.getHours())}:${pZ(dt.getMinutes())}:00+09:00`;
+  }
+  const workStart = `${baseDate}T${startTime}:00+09:00`;
+  const workEnd   = `${baseDate}T${endTime}:00+09:00`;
+
+  // 🏠→🏭 直行
+  if(travelState.go){
+    events.push({title:'移動→', memo:`🏠 自宅 → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
+  }
+  // 🏭→🏠 直帰
+  if(travelState.back){
+    events.push({title:'→移動', memo:`🏭 ${custName} → 🏠 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
+  }
+  // 🏢→🏭 出社から現場
+  if(travelState.office){
+    events.push({title:'移動→', memo:`🏢 ${company} → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
+  }
+  // 🏭→🏢 帰社
+  if(travelState.return){
+    events.push({title:'→移動', memo:`🏭 ${custName} → 🏢 ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
+  }
+  // 🏭→🏭 現場移動（任意）
+  const fromSite = document.getElementById('i-tr-from-site')?.value.trim();
+  if(fromSite){
+    events.push({title:'移動', memo:`🏭 ${fromSite} → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
+  }
+  return events;
+}
+
+// ===== Recurrence =====
+let recPattern = 'WEEKLY;BYDAY=MO,TU,WE,TH,FR';
+let recLabel   = '平日のみ';
+
+function togRecurrence(){
+  const on = document.getElementById('i-rec-tog').checked;
+  document.getElementById('i-rec-body').classList.toggle('open', on);
+  document.getElementById('i-rec-lbl').textContent = on ? 'あり' : 'なし';
+  updateRecPreview();
+}
+
+function selRecPattern(el, pattern, label){
+  document.querySelectorAll('#i-rec-chips .chip').forEach(c => c.className = 'chip');
+  el.classList.add('cb');
+  recPattern = pattern; recLabel = label;
+  updateRecPreview();
+}
+
+function updateRecPreview(){
+  const endDate = document.getElementById('i-rec-end').value;
+  const box = document.getElementById('i-rec-preview');
+  if(!endDate){ box.textContent = '繰り返し終了日を入力してください'; return; }
+  const d = new Date(endDate);
+  const DOW = ['日','月','火','水','木','金','土'];
+  box.textContent = `🔄 ${recLabel}で繰り返し
+終了：${endDate.replace(/-/g,'/')}(${DOW[d.getDay()]})`;
+}
+
+// ===== ShowAs =====
+let showAsI = 'busy'; // default
+let showAsM = 'busy';
+
+function selShowAs(prefix, val){
+  if(prefix==='i') showAsI=val;
+  else if(prefix==='att') showAsAtt=val;
+  else showAsM=val;
+  // update chip display
+  ['free','busy','tentative'].forEach(v=>{
+    const el=document.getElementById(prefix+'-sa-'+v);
+    if(!el) return;
+    el.className='chip'+(v===val?' cb':'');
+  });
+}
+
+function autoShowAs(prefix, assignAbbr){
+  const auto = assignAbbr==='委' ? 'free' : 'busy';
+  selShowAs(prefix, auto);
+}
+
+// ===== Category =====
+let selectedCat = {id:'', name:'', color:'', form:'i'}; // per form, track separately
+let selCatI = {id:'',name:'',color:''};
+let selCatM = {id:'',name:'',color:''};
+let selCatAtt= {id:'',name:'',color:''};
+
+function renderCatChips(){
+  ['i','m','att'].forEach(prefix=>{
+    const container = document.getElementById(prefix+'-cat-chips');
+    if(!container) return;
+    const noneActive = (prefix==='i'&&!selCatI.id)||(prefix==='m'&&!selCatM.id)||(prefix==='att'&&!selCatAtt.id);
+    container.innerHTML = `<div class="cat-chip cat-none${noneActive?' active':''}" onclick="selCat(this,'','','${prefix}')">なし</div>`;
+    db.categories.forEach(cat=>{
+      const sel = prefix==='i'?selCatI:prefix==='att'?selCatAtt:selCatM;
+      const isActive = sel.id===cat.id;
+      const chip = document.createElement('div');
+      chip.className = 'cat-chip'+(isActive?' active':'');
+      chip.style.borderColor = cat.color;
+      chip.style.background = isActive ? cat.color : '';
+      chip.style.color = isActive ? '#fff' : cat.color;
+      chip.textContent = cat.name;
+      chip.onclick = ()=>selCat(chip, cat.id, cat.name, cat.color, prefix);
+      container.appendChild(chip);
+    });
+  });
+}
+
+function selCat(el, id, name, color, prefix){
+  if(typeof color === 'string' && color.startsWith('#') || color===''){
+    // ok
+  } else {
+    // old signature compat: selCat(el, id, name, prefix)
+    prefix = color; color = name; name = id; id = el;
+  }
+  const ref = prefix==='m' ? selCatM : prefix==='att' ? selCatAtt : selCatI;
+  ref.id=id||''; ref.name=name||''; ref.color=color||'';
+  renderCatChips();
+}
+
+function renderCatMaster(){
+  const list = document.getElementById('cfg-cat-list');
+  if(!list) return;
+  list.innerHTML = '';
+  db.categories.forEach(cat=>{
+    const li = document.createElement('li');
+    li.className = 'mi';
+    li.innerHTML = `<div class="mdot" style="background:${cat.color};width:16px;height:16px;border-radius:4px;"></div><span class="mn">${cat.name}</span><span class="msb2" style="color:${cat.color};font-family:var(--mono);">${cat.color}</span><button class="mdel" onclick="delCategory('${cat.id}')">✕</button>`;
+    list.appendChild(li);
+  });
+}
+
+function addCategory(){
+  const name = document.getElementById('add-cat-name').value.trim();
+  const color = document.getElementById('add-cat-color').value;
+  if(!name){toast('⚠️ 分類名を入力してください');return;}
+  db.categories.push({id:'cat'+Date.now(), name, color});
+  document.getElementById('add-cat-name').value='';
+  save(); renderCatMaster(); renderCatChips();
+  toast('✅ 色分類を追加しました');
+}
+
+function delCategory(id){
+  db.categories = db.categories.filter(c=>c.id!==id);
+  if(selCatI.id===id) selCatI={id:'',name:'',color:''};
+  if(selCatM.id===id) selCatM={id:'',name:'',color:''};
+  save(); renderCatMaster(); renderCatChips();
+}
+
+// ===== Customize / Sort =====
+let sortOrders = {
+  top:  ['inspection','meeting','attendance'],
+  insp: ['定期点検','都度点検','トラブル','その他'],
+  att:  ['有休','午前半休','午後半休','振替休日','社内勤務','休日出勤'],
+  nav:  ['home','meeting','inspection','master','settings','help'],
+};
+
+const SORT_LABELS = {
+  top:  {inspection:'⚡ 発電機メンテ', meeting:'📅 会議・その他', attendance:'🗓 勤怠・休暇'},
+  insp: {'定期点検':'🔵 定期点検','都度点検':'🟢 都度点検','トラブル':'🔴 トラブル','その他':'🟣 その他'},
+  att:  {'有休':'🌴 有休','午前半休':'🌅 午前半休','午後半休':'🌇 午後半休','振替休日':'🔄 振替休日','社内勤務':'🏢 社内勤務','休日出勤':'💼 休日出勤'},
+  nav:  {home:'🏠 ホーム', meeting:'👥 会議', inspection:'⚡ 点検', master:'⚙️ マスタ', settings:'📧 設定', help:'❓ ヘルプ'},
+};
+
+function loadSortOrders(){
+  const saved = localStorage.getItem('sort_orders');
+  if(saved){ try{ const d=JSON.parse(saved); Object.assign(sortOrders,d); }catch(e){} }
+}
+function saveSortOrders(){
+  localStorage.setItem('sort_orders', JSON.stringify(sortOrders));
+}
+
+function renderSortList(type){
+  const ul = document.getElementById('sort-'+type);
+  if(!ul) return;
+  ul.innerHTML = '';
+  sortOrders[type].forEach((key, idx) => {
+    const li = document.createElement('li');
+    li.className = 'sort-item';
+    li.innerHTML = `
+      <span class="sort-label">${SORT_LABELS[type][key]||key}</span>
+      <div class="sort-btns">
+        <button class="sort-btn" onclick="moveSort('${type}',${idx},-1)" ${idx===0?'disabled':''}>↑</button>
+        <button class="sort-btn" onclick="moveSort('${type}',${idx},1)"  ${idx===sortOrders[type].length-1?'disabled':''}>↓</button>
+      </div>`;
+    ul.appendChild(li);
+  });
+}
+
+function moveSort(type, idx, dir){
+  const arr = sortOrders[type];
+  const newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= arr.length) return;
+  [arr[idx], arr[newIdx]] = [arr[newIdx], arr[idx]];
+  saveSortOrders();
+  renderSortList(type);
+  applySort(type);
+}
+
+function applySort(type){
+  if(type==='top')  applyTopSort();
+  if(type==='insp') applyInspSort();
+  if(type==='att')  applyAttSort();
+  if(type==='nav')  applyNavSort();
+}
+
+function applyTopSort(){
+  const container = document.querySelector('.tcards');
+  if(!container) return;
+  const cards = {};
+  container.querySelectorAll('.tc').forEach(c => { cards[c.dataset.t] = c; });
+  sortOrders.top.forEach(key => {
+    if(cards[key]) container.appendChild(cards[key]);
+  });
+}
+
+function applyInspSort(){
+  const container = document.getElementById('i-insp');
+  if(!container) return;
+  const chips = {};
+  container.querySelectorAll('.chip').forEach(c => {
+    // match by text content to key
+    const text = c.textContent.trim();
+    Object.keys(SORT_LABELS.insp).forEach(k => {
+      if(SORT_LABELS.insp[k].replace(/[🔵🟢🔴🟣]\s*/,'') === text.replace(/[🔵🟢🔴🟣]\s*/,'')) chips[k] = c;
+    });
+  });
+  sortOrders.insp.forEach(key => { if(chips[key]) container.appendChild(chips[key]); });
+}
+
+function applyAttSort(){
+  const container = document.getElementById('att-type-chips');
+  if(!container) return;
+  const chips = {};
+  container.querySelectorAll('.chip').forEach(c => {
+    const text = c.textContent.trim().replace(/[🌴🌅🌇🔄🏢💼]\s*/,'');
+    Object.keys(SORT_LABELS.att).forEach(k => {
+      if(SORT_LABELS.att[k].replace(/[🌴🌅🌇🔄🏢💼]\s*/,'') === text) chips[k] = c;
+    });
+  });
+  sortOrders.att.forEach(key => { if(chips[key]) container.appendChild(chips[key]); });
+}
+
+function applyNavSort(){
+  const nav = document.querySelector('.bnav');
+  if(!nav) return;
+  const items = {};
+  nav.querySelectorAll('.ni').forEach(n => {
+    const id = n.id.replace('nav-','');
+    items[id] = n;
+  });
+  sortOrders.nav.forEach(key => { if(items[key]) nav.appendChild(items[key]); });
+}
+
+function initSort(){
+  loadSortOrders();
+  ['top','insp','att','nav'].forEach(t => applySort(t));
+}
+
+function renderAllSortLists(){
+  ['top','insp','att','nav'].forEach(t => renderSortList(t));
+}
+
+function togHelp(btn){
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+
+init();
+</script>
+</body>
+</html>

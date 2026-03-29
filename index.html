@@ -1202,6 +1202,7 @@ function goForm(fid,sub){
     // 振替休日リセット
     furikaeDates=[];
     renderFurikaeDates();
+    showAsIManual=false; // 手動フラグリセット
     const hl=document.getElementById('i-holiday-list');
     if(hl) hl.innerHTML='';
     const ft=document.getElementById('i-furikae-tog');
@@ -1498,8 +1499,9 @@ function triggerSend(formType,action){
     <div class="crow"><span class="clbl">日時</span><span class="cval">${dtStr}</span></div>
     ${p.location?`<div class="crow"><span class="clbl">場所</span><span class="cval">${he(p.location)}</span></div>`:''}
     ${prepStr?`<div class="crow"><span class="clbl">準備期限</span><span class="cval">${prepStr}</span></div>`:''}
+    <div class="crow"><span class="clbl">表示方法</span><span class="cval">${p.showAs==='free'?'🔲 空き時間':p.showAs==='tentative'?'❓ 仮の予定':'🔳 予定あり'}</span></div>
     ${p.furikaeEvents&&p.furikaeEvents.length?`<div class="crow"><span class="clbl">振替休日</span><span class="cval">${p.furikaeEvents.length}日分</span></div>`:''}
-    ${p.travelEvents&&p.travelEvents.length?`<div class="crow"><span class="clbl">移動予定</span><span class="cval">${p.travelEvents.map(t=>t.title).join('、')}</span></div>`:''}
+    ${p.travelEvents&&p.travelEvents.length?`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--green)">${p.travelEvents.map(t=>t.title).join(' / ')}</span></div>`:`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--text3)">なし</span></div>`}
     ${isPA?`<div class="crow"><span class="clbl">送信先</span><span class="cval" style="color:var(--accent)">${he(cfg.email)}</span></div>`:''}
   `;
   document.getElementById('modal-confirm').classList.add('open');
@@ -2054,12 +2056,12 @@ function updateRecPreview(){
 // ===== ShowAs =====
 let showAsI = 'busy'; // default
 let showAsM = 'busy';
+let showAsIManual = false; // ユーザーが手動で変更したか
 
-function selShowAs(prefix, val){
-  if(prefix==='i') showAsI=val;
+function selShowAs(prefix, val, auto){
+  if(prefix==='i'){ showAsI=val; if(!auto) showAsIManual=true; }
   else if(prefix==='att') showAsAtt=val;
   else showAsM=val;
-  // update chip display
   ['free','busy','tentative'].forEach(v=>{
     const el=document.getElementById(prefix+'-sa-'+v);
     if(!el) return;
@@ -2068,8 +2070,10 @@ function selShowAs(prefix, val){
 }
 
 function autoShowAs(prefix, assignAbbr){
+  // 手動で変更済みの場合は上書きしない
+  if(prefix==='i' && showAsIManual) return;
   const auto = assignAbbr==='委' ? 'free' : 'busy';
-  selShowAs(prefix, auto);
+  selShowAs(prefix, auto, true); // auto=true で手動フラグを立てない
 }
 
 // ===== Category =====

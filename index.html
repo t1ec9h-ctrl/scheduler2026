@@ -1668,8 +1668,10 @@ function renderMasterAccordion(){
 }
 
 function togMacc(btn){
-  const body = btn.nextElementSibling;
+  const card = btn.closest('.msec') || btn.parentElement;
+  const body = card.querySelector('.macc-body');
   const arr = btn.querySelector('.macc-arr');
+  if(!body) return;
   const open = body.style.display === 'none';
   body.style.display = open ? 'block' : 'none';
   arr.style.transform = open ? 'rotate(90deg)' : '';

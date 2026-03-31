@@ -1104,6 +1104,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 <script>
 let db={customers:[],units:[],partners:[],categories:[]};
 let cfg={email:'',pa:false,ics:true,company:'会社'};
+let selCatI  = {id:'',name:'',color:''};
+let selCatM  = {id:'',name:'',color:''};
+let selCatAtt= {id:'',name:'',color:''};
 let iS={custId:null,custName:'',selUnits:[],irrNames:[],inspType:'定期点検',inspColor:'cb',assignType:'自社対応',assignAbbr:'',assignColor:'cb'};
 let mS={type:'社内会議',color:'cb'};
 let pending=null,pendingAction=null;
@@ -1135,8 +1138,9 @@ function init(){
   document.getElementById('cfg-company').value=cfg.company||'';
   if(!cfg.company) cfg.company='会社';
   document.getElementById('pa-addr-field').style.display=cfg.pa?'':'none';
+  save(); // デフォルト値を保存
   updateBadge();renderCustSel();renderPartnerSel();renderCatChips();initSort();
-  renderSubmitButtons('m');renderSubmitButtons('i');
+  renderSubmitButtons('m');renderSubmitButtons('i');renderSubmitButtons('att');
 }
 function save(){localStorage.setItem('sched_v5',JSON.stringify({db,cfg}));}
 function saveSettings(){
@@ -2099,9 +2103,7 @@ function autoShowAs(prefix, assignAbbr){
 
 // ===== Category =====
 let selectedCat = {id:'', name:'', color:'', form:'i'}; // per form, track separately
-let selCatI = {id:'',name:'',color:''};
-let selCatM = {id:'',name:'',color:''};
-let selCatAtt= {id:'',name:'',color:''};
+// selCat declarations moved to top
 
 function renderCatChips(){
   ['i','m','att'].forEach(prefix=>{

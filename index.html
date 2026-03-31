@@ -1111,28 +1111,21 @@ let pending=null,pendingAction=null;
 function init(){
   const s=localStorage.getItem('sched_v5');
   if(s){try{const d=JSON.parse(s);db=d.db||db;cfg=d.cfg||cfg;}catch(e){}}
-  // 旧データとの互換性：存在しないフィールドを補完
-  if(!db.categories) db.categories=[];
-  if(!db.customers)  db.customers=[];
-  if(!db.units)      db.units=[];
-  if(!db.partners)   db.partners=[];
-  else{
-    db.categories=[
-      {id:'cat1',name:'点検・作業',color:'#3ddc84'},
-      {id:'cat2',name:'トラブル対応',color:'#ff4d6a'},
-      {id:'cat3',name:'会議',color:'#4d9fff'},
-      {id:'cat4',name:'社外打合せ',color:'#ff8c42'},
-      {id:'cat5',name:'移動',color:'#a78bfa'},
-      {id:'cat6',name:'有休',color:'#ffc233'},
-      {id:'cat7',name:'振替休日',color:'#ffc233'},
-      {id:'cat8',name:'休日出勤',color:'#ff8c42'},
-      {id:'cat9',name:'社内勤務',color:'#4d9fff'},
-    ];
-    db.customers=[{id:'c1',name:'大阪工業㈱'},{id:'c2',name:'神戸電機㈱'},{id:'c3',name:'尼崎製造㈱'}];
-    db.units=[{id:'u1',cid:'c1',name:'１号機'},{id:'u2',cid:'c1',name:'２号機'},{id:'u3',cid:'c1',name:'３号機'},{id:'u4',cid:'c2',name:'１号機'},{id:'u5',cid:'c2',name:'２号機'},{id:'u6',cid:'c3',name:'１号機'}];
-    db.partners=[{id:'p1',name:'○○電機サービス'},{id:'p2',name:'△△メンテナンス'}];
-    save();
-  }
+  // 旧データとの互換性：存在しないフィールドのみ補完（既存データは上書きしない）
+  if(!db.categories || !db.categories.length) db.categories=[
+    {id:'cat1',name:'点検・作業',color:'#3ddc84'},
+    {id:'cat2',name:'トラブル対応',color:'#ff4d6a'},
+    {id:'cat3',name:'会議',color:'#4d9fff'},
+    {id:'cat4',name:'社外打合せ',color:'#ff8c42'},
+    {id:'cat5',name:'移動',color:'#a78bfa'},
+    {id:'cat6',name:'有休',color:'#ffc233'},
+    {id:'cat7',name:'振替休日',color:'#ffc233'},
+    {id:'cat8',name:'休日出勤',color:'#ff8c42'},
+    {id:'cat9',name:'社内勤務',color:'#4d9fff'},
+  ];
+  if(!db.customers) db.customers=[];
+  if(!db.units)     db.units=[];
+  if(!db.partners)  db.partners=[];
   const t=new Date().toISOString().split('T')[0];
   document.getElementById('m-date').value=t;
   document.getElementById('i-date').value=t;

@@ -234,8 +234,11 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="tc" data-t="meeting" onclick="goForm('meeting')">
         <span class="tc-icon">📅</span><div class="tc-name">会議・その他</div><div class="tc-desc">会議・個人タスク・メモなど</div>
       </div>
-      <div class="tc" data-t="attendance" onclick="goForm('attendance')" style="grid-column:1/-1;">
+      <div class="tc" data-t="attendance" onclick="goForm('attendance')">
         <span class="tc-icon">🗓</span><div class="tc-name">勤怠・休暇</div><div class="tc-desc">有休・半休・社内勤務</div>
+      </div>
+      <div class="tc" data-t="travel" onclick="goForm('travel')" style="grid-column:1/-1;">
+        <span class="tc-icon">🚗</span><div class="tc-name">移動予定</div><div class="tc-desc">直行・直帰・出社から現場・帰社・現場移動</div>
       </div>
     </div>
   </div>
@@ -520,6 +523,73 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <div class="submit-area" id="i-submit-area"></div>
+  </div>
+
+  <!-- TRAVEL FORM -->
+  <div class="screen fp" id="screen-travel">
+
+    <!-- パターン選択 -->
+    <div class="sec">
+      <div class="sh"><div class="st">移動パターン</div></div>
+      <div class="sb">
+        <div class="cg" style="flex-direction:column;gap:8px;" id="tv-pattern-chips">
+          <div class="chip cb"  id="tv-p-go"     onclick="selTvPattern(this,'go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
+          <div class="chip"     id="tv-p-back"   onclick="selTvPattern(this,'back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
+          <div class="chip"     id="tv-p-office" onclick="selTvPattern(this,'office')">🏢 → 🏭　出社から現場</div>
+          <div class="chip"     id="tv-p-return" onclick="selTvPattern(this,'return')">🏭 → 🏢　帰社</div>
+          <div class="chip"     id="tv-p-site"   onclick="selTvPattern(this,'site')"  >🏭 → 🏭　現場移動</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 現場名 -->
+    <div class="sec">
+      <div class="sh"><div class="st">現場</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>現場名<span class="req">*</span></label>
+          <div class="cr2">
+            <select id="tv-cust" onchange="onTvCustChange()"><option value="">— 選択 —</option></select>
+            <button class="birr" onclick="openTvIrr()">✏️</button>
+          </div>
+        </div>
+        <!-- 現場移動のとき：移動元も入力 -->
+        <div class="field" id="tv-from-field" style="display:none;margin-bottom:0;">
+          <label>移動元の現場名</label>
+          <input type="text" id="tv-from-site" placeholder="例：神戸電機㈱">
+        </div>
+      </div>
+    </div>
+
+    <!-- 日時 -->
+    <div class="sec">
+      <div class="sh"><div class="st">日時</div></div>
+      <div class="sb">
+        <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="tv-date" oninput="updateTvPreview()"></div>
+        <div class="fr">
+          <div class="field"><label>開始</label><input type="time" id="tv-start" value="08:00" oninput="updateTvPreview()"></div>
+          <div class="field"><label>終了</label><input type="time" id="tv-end" value="09:00" oninput="updateTvPreview()"></div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>移動時間（分）で自動計算</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="number" id="tv-min" value="60" min="5" max="480" style="width:90px;text-align:center;" oninput="calcTvEnd()">
+            <button class="bmadd" onclick="calcTvEnd()" style="white-space:nowrap;">終了時刻を計算</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 件名プレビュー -->
+    <div class="sec">
+      <div class="sh"><div class="st">登録内容</div></div>
+      <div class="sb">
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="tv-title-preview">移動パターンと現場を選択してください</div>
+      </div>
+    </div>
+
+    <div class="submit-area" id="tv-submit-area"></div>
   </div>
 
   <!-- ATTENDANCE FORM -->
@@ -1140,7 +1210,7 @@ function init(){
   document.getElementById('pa-addr-field').style.display=cfg.pa?'':'none';
   save(); // デフォルト値を保存
   updateBadge();renderCustSel();renderPartnerSel();renderCatChips();initSort();
-  renderSubmitButtons('m');renderSubmitButtons('i');renderSubmitButtons('att');
+  renderSubmitButtons('m');renderSubmitButtons('i');renderSubmitButtons('att');renderSubmitButtons('tv');
 }
 function save(){localStorage.setItem('sched_v5',JSON.stringify({db,cfg}));}
 function saveSettings(){
@@ -1213,14 +1283,26 @@ function renderSubmitButtons(p){
 }
 
 // ===== Navigation =====
-const TITLES={select:'⚡ スケジューラ',meeting:'会議・打合せ',inspection:'発電機メンテ',attendance:'勤怠・休暇',master:'マスタ管理',settings:'設定',help:'ヘルプ'};
-const NAVMAP={select:'nav-home',meeting:'nav-meeting',inspection:'nav-inspection',attendance:'nav-home',master:'nav-master',settings:'nav-settings',help:'nav-help'};
+const TITLES={select:'⚡ スケジューラ',meeting:'会議・打合せ',inspection:'発電機メンテ',attendance:'勤怠・休暇',travel:'移動予定',master:'マスタ管理',settings:'設定',help:'ヘルプ'};
+const NAVMAP={select:'nav-home',meeting:'nav-meeting',inspection:'nav-inspection',attendance:'nav-home',travel:'nav-home',master:'nav-master',settings:'nav-settings',help:'nav-help'};
 function navTo(id){
   showScreen(id);
   if(id==='master') renderMaster();
   if(id==='settings'){renderCatMaster();renderCatChips();renderAllSortLists();}
 }
 function goForm(fid,sub){
+  if(fid==='travel'){
+    const today=new Date().toISOString().split('T')[0];
+    document.getElementById('tv-date').value=today;
+    tvState={pattern:'go',custName:'',custId:''};
+    document.querySelectorAll('#tv-pattern-chips .chip').forEach((c,i)=>c.className='chip'+(i===0?' cb':''));
+    document.getElementById('tv-from-field').style.display='none';
+    document.getElementById('tv-from-site').value='';
+    document.getElementById('tv-title-preview').textContent='移動パターンと現場を選択してください';
+    renderSubmitButtons('tv');
+    showScreen('travel');
+    return;
+  }
   if(fid==='inspection'){
     // 振替休日リセット
     furikaeDates=[];
@@ -1320,10 +1402,14 @@ function delRow(btn){btn.parentElement.remove();}
 
 // ===== Customer/Unit =====
 function renderCustSel(){
-  const s=document.getElementById('i-cust'),c=s.value;
-  s.innerHTML='<option value="">— 選択 —</option>';
-  db.customers.forEach(cu=>{s.appendChild(new Option(cu.name,cu.id));});
-  if(c)s.value=c;
+  ['i-cust','tv-cust'].forEach(id=>{
+    const s=document.getElementById(id);
+    if(!s) return;
+    const c=s.value;
+    s.innerHTML='<option value="">— 選択 —</option>';
+    db.customers.forEach(cu=>{s.appendChild(new Option(cu.name,cu.id));});
+    if(c)s.value=c;
+  });
 }
 function renderPartnerSel(){
   const s=document.getElementById('i-partner');
@@ -1502,7 +1588,7 @@ function buildInspection(){
 // ===== Trigger & Confirm =====
 function triggerSend(formType,action){
   if(action==='pa'&&!cfg.email){toast('⚠️ 設定タブでメールアドレスを入力してください');navTo('settings');return;}
-  const p=(formType==='meeting'||formType==='m')?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():buildInspection();
+  const p=(formType==='meeting'||formType==='m')?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():(formType==='travel'||formType==='tv')?buildTravel():buildInspection();
   if(!p)return;
   pending=p;pendingAction=action;
   const isPA=action==='pa';
@@ -2171,14 +2257,14 @@ function delCategory(id){
 
 // ===== Customize / Sort =====
 let sortOrders = {
-  top:  ['inspection','meeting','attendance'],
+  top:  ['inspection','meeting','attendance','travel'],
   insp: ['定期点検','都度点検','トラブル','その他'],
   att:  ['有休','午前半休','午後半休','振替休日','社内勤務','休日出勤'],
   nav:  ['home','meeting','inspection','master','settings','help'],
 };
 
 const SORT_LABELS = {
-  top:  {inspection:'⚡ 発電機メンテ', meeting:'📅 会議・その他', attendance:'🗓 勤怠・休暇'},
+  top:  {inspection:'⚡ 発電機メンテ', meeting:'📅 会議・その他', attendance:'🗓 勤怠・休暇', travel:'🚗 移動予定'},
   insp: {'定期点検':'🔵 定期点検','都度点検':'🟢 都度点検','トラブル':'🔴 トラブル','その他':'🟣 その他'},
   att:  {'有休':'🌴 有休','午前半休':'🌅 午前半休','午後半休':'🌇 午後半休','振替休日':'🔄 振替休日','社内勤務':'🏢 社内勤務','休日出勤':'💼 休日出勤'},
   nav:  {home:'🏠 ホーム', meeting:'👥 会議', inspection:'⚡ 点検', master:'⚙️ マスタ', settings:'📧 設定', help:'❓ ヘルプ'},
@@ -2315,6 +2401,101 @@ function saveEditUnit(){
   if(u){ u.name = name; save(); renderMaster(); }
   closeModal();
   toast('✅ 号機名を変更しました');
+}
+
+// ===== Travel Form =====
+let tvState = {pattern:'go', custName:'', custId:''};
+
+const TV_TITLES = {
+  go:     {title:'移動→', memo:(c,company)=>`🏠 自宅 → 🏭 ${c}`},
+  back:   {title:'→移動', memo:(c,company)=>`🏭 ${c} → 🏠 自宅`},
+  office: {title:'移動→', memo:(c,company)=>`🏢 ${company} → 🏭 ${c}`},
+  return: {title:'→移動', memo:(c,company)=>`🏭 ${c} → 🏢 ${company}`},
+  site:   {title:'移動',  memo:(c,company,from)=>`🏭 ${from} → 🏭 ${c}`},
+};
+
+function selTvPattern(el, pattern){
+  document.querySelectorAll('#tv-pattern-chips .chip').forEach(c=>c.className='chip');
+  el.classList.add('cb');
+  tvState.pattern = pattern;
+  document.getElementById('tv-from-field').style.display = pattern==='site' ? '' : 'none';
+  updateTvPreview();
+}
+
+function onTvCustChange(){
+  const s = document.getElementById('tv-cust');
+  tvState.custId   = s.value;
+  tvState.custName = s.options[s.selectedIndex]?.text || '';
+  updateTvPreview();
+}
+
+function openTvIrr(){
+  document.getElementById('irr-name').value='';
+  document.getElementById('irr-units').value='';
+  // Reuse irr modal but for travel
+  document.getElementById('modal-irr').dataset.caller='travel';
+  document.getElementById('modal-irr').classList.add('open');
+}
+
+function calcTvEnd(){
+  const start = document.getElementById('tv-start').value;
+  const mins  = parseInt(document.getElementById('tv-min').value)||60;
+  if(!start) return;
+  const [h,m] = start.split(':').map(Number);
+  const dt = new Date(2000,0,1,h,m);
+  dt.setMinutes(dt.getMinutes()+mins);
+  document.getElementById('tv-end').value =
+    `${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+  updateTvPreview();
+}
+
+function updateTvPreview(){
+  const pat  = tvState.pattern;
+  const cust = tvState.custName;
+  const from = document.getElementById('tv-from-site')?.value.trim()||'';
+  const company = cfg.company||'会社';
+  const date = document.getElementById('tv-date')?.value;
+  const start= document.getElementById('tv-start')?.value;
+  const end  = document.getElementById('tv-end')?.value;
+  if(!cust){ document.getElementById('tv-title-preview').textContent='現場を選択してください'; return; }
+  const t = TV_TITLES[pat];
+  const title = t.title;
+  const memo  = t.memo(cust, company, from);
+  const timeStr = start&&end ? `${start}〜${end}` : '';
+  const DOW=['日','月','火','水','木','金','土'];
+  const dateStr = date ? `${date.replace(/-/g,'/')}(${DOW[new Date(date).getDay()]})` : '';
+  document.getElementById('tv-title-preview').textContent =
+    `${title}
+${dateStr} ${timeStr}
+${memo}`;
+}
+
+function buildTravel(){
+  const date  = document.getElementById('tv-date').value;
+  const start = document.getElementById('tv-start').value;
+  const end   = document.getElementById('tv-end').value;
+  const cust  = tvState.custName;
+  const pat   = tvState.pattern;
+  const from  = document.getElementById('tv-from-site')?.value.trim()||'';
+  const company = cfg.company||'会社';
+  if(!date){ toast('⚠️ 日付を入力してください'); return null; }
+  if(!cust){ toast('⚠️ 現場を選択してください'); return null; }
+  if(pat==='site'&&!from){ toast('⚠️ 移動元の現場名を入力してください'); return null; }
+  const t     = TV_TITLES[pat];
+  const title = t.title;
+  const memo  = t.memo(cust, company, from);
+  return{
+    title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
+    location:cust, category:'移動', showAs:'free',
+    units:'', assign:'', work:'', prep:'', memo,
+    travelEvents:[], rrule:'', isAllday:false,
+    furikaeEvent:null, furikaeEvents:[],
+    travelGoStart:'',travelGoEnd:'',travelGoMemo:'',
+    travelBackStart:'',travelBackEnd:'',travelBackMemo:'',
+    travelOfficeStart:'',travelOfficeEnd:'',
+    travelReturnStart:'',travelReturnEnd:'',
+    travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:cust,
+  };
 }
 
 function togHelp(btn){

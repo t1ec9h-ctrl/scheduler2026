@@ -994,7 +994,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
   <div class="msh">
     <div class="mh"></div>
     <div class="mtitle">🏭 物件を追加</div>
-    <div class="field"><label>物件名<span class="req">*</span></label><input type="text" id="new-cust-name" placeholder="例：イオンモール茨木" oninput="updateBulkPreview1()"></div>
+    <div class="field"><label>物件名<span class="req">*</span></label><input type="text" id="new-cust-name" placeholder="物件名を入力" oninput="updateBulkPreview1()"></div>
     <div class="field">
       <label>号機を一括追加（連番）</label>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -1042,6 +1042,32 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="mac">
       <button class="bcancel" onclick="closeModal()">キャンセル</button>
       <button class="bok" onclick="saveNewUnits()">追加する</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit customer modal -->
+<div class="mbg" id="modal-edit-cust">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle">✏️ 物件名を変更</div>
+    <div class="field"><label>物件名</label><input type="text" id="edit-cust-name" placeholder="新しい物件名"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" onclick="saveEditCust()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit unit modal -->
+<div class="mbg" id="modal-edit-unit">
+  <div class="msh">
+    <div class="mh"></div>
+    <div class="mtitle">✏️ 号機名を変更</div>
+    <div class="field"><label>号機名</label><input type="text" id="edit-unit-name" placeholder="新しい号機名"></div>
+    <div class="mac">
+      <button class="bcancel" onclick="closeModal()">キャンセル</button>
+      <button class="bok" onclick="saveEditUnit()">保存</button>
     </div>
   </div>
 </div>
@@ -1614,6 +1640,7 @@ function renderMasterAccordion(){
           <div class="mdot" style="background:var(--accent);flex-shrink:0"></div>
           <span style="flex:1;font-size:14px;font-weight:700;color:var(--text)">${c.name}</span>
           <span style="font-size:11px;color:var(--text3);font-family:var(--mono);">${units.length}台</span>
+          <button onclick="event.stopPropagation();openEditCust('${c.id}','${c.name.replace(/'/g,"\\'")}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 6px;">✏️</button>
           <span class="macc-arr" style="font-size:18px;color:var(--text3);transition:transform .2s">›</span>
         </div>
       </button>
@@ -1630,7 +1657,8 @@ function renderMasterAccordion(){
     units.forEach(u => {
       const li = document.createElement('li');
       li.className = 'mi';
-      li.innerHTML = `<div class="mdot" style="background:var(--green)"></div><span class="mn">${u.name}</span><button class="mdel" onclick="delUnit('${u.id}')">✕</button>`;
+      const eName = u.name.replace(/'/g,"\\'");
+      li.innerHTML = `<div class="mdot" style="background:var(--green)"></div><span class="mn">${u.name}</span><button onclick="openEditUnit('${u.id}','${eName}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 6px;">✏️</button><button class="mdel" onclick="delUnit('${u.id}')">✕</button>`;
       ul.appendChild(li);
     });
     if(!units.length){
@@ -2256,6 +2284,40 @@ function initSort(){
 
 function renderAllSortLists(){
   ['top','insp','att','nav'].forEach(t => renderSortList(t));
+}
+
+// ===== Edit Customer/Unit =====
+let editCustId = null;
+let editUnitId = null;
+
+function openEditCust(id, currentName){
+  editCustId = id;
+  document.getElementById('edit-cust-name').value = currentName;
+  document.getElementById('modal-edit-cust').classList.add('open');
+}
+
+function saveEditCust(){
+  const name = document.getElementById('edit-cust-name').value.trim();
+  if(!name){ toast('⚠️ 物件名を入力してください'); return; }
+  const c = db.customers.find(c=>c.id===editCustId);
+  if(c){ c.name = name; save(); renderMaster(); renderCustSel(); }
+  closeModal();
+  toast('✅ 物件名を変更しました');
+}
+
+function openEditUnit(id, currentName){
+  editUnitId = id;
+  document.getElementById('edit-unit-name').value = currentName;
+  document.getElementById('modal-edit-unit').classList.add('open');
+}
+
+function saveEditUnit(){
+  const name = document.getElementById('edit-unit-name').value.trim();
+  if(!name){ toast('⚠️ 号機名を入力してください'); return; }
+  const u = db.units.find(u=>u.id===editUnitId);
+  if(u){ u.name = name; save(); renderMaster(); }
+  closeModal();
+  toast('✅ 号機名を変更しました');
 }
 
 function togHelp(btn){

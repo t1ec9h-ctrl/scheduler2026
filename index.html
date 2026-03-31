@@ -1479,7 +1479,7 @@ function buildInspection(){
 // ===== Trigger & Confirm =====
 function triggerSend(formType,action){
   if(action==='pa'&&!cfg.email){toast('⚠️ 設定タブでメールアドレスを入力してください');navTo('settings');return;}
-  const p=formType==='meeting'?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():buildInspection();
+  const p=(formType==='meeting'||formType==='m')?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():buildInspection();
   if(!p)return;
   pending=p;pendingAction=action;
   const isPA=action==='pa';

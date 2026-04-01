@@ -306,6 +306,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
           <div class="chip cb" id="m-sa-busy" onclick="selShowAs('m','busy')">🔳 予定あり</div>
           <div class="chip" id="m-sa-tentative" onclick="selShowAs('m','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="m-sa-woe" onclick="selShowAs('m','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
     </div>
@@ -459,6 +460,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="i-sa-free" onclick="selShowAs('i','free')">🔲 空き時間</div>
           <div class="chip cb" id="i-sa-busy" onclick="selShowAs('i','busy')">🔳 予定あり</div>
           <div class="chip" id="i-sa-tentative" onclick="selShowAs('i','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="i-sa-woe" onclick="selShowAs('i','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
     </div>
@@ -672,6 +674,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="att-sa-free"      onclick="selShowAs('att','free')">🔲 空き時間</div>
           <div class="chip cb" id="att-sa-busy"   onclick="selShowAs('att','busy')">🔳 予定あり</div>
           <div class="chip" id="att-sa-tentative" onclick="selShowAs('att','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="att-sa-woe" onclick="selShowAs('att','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
     </div>
@@ -1610,7 +1613,7 @@ function triggerSend(formType,action){
     <div class="crow"><span class="clbl">日時</span><span class="cval">${dtStr}</span></div>
     ${p.location?`<div class="crow"><span class="clbl">場所</span><span class="cval">${he(p.location)}</span></div>`:''}
     ${prepStr?`<div class="crow"><span class="clbl">準備期限</span><span class="cval">${prepStr}</span></div>`:''}
-    <div class="crow"><span class="clbl">表示方法</span><span class="cval">${p.showAs==='free'?'🔲 空き時間':p.showAs==='tentative'?'❓ 仮の予定':'🔳 予定あり'}</span></div>
+    <div class="crow"><span class="clbl">表示方法</span><span class="cval">${p.showAs==='free'?'🔲 空き時間':p.showAs==='tentative'?'❓ 仮の予定':p.showAs==='workingElsewhere'?'🚗 外出中':'🔳 予定あり'}</span></div>
     ${p.furikaeEvents&&p.furikaeEvents.length?`<div class="crow"><span class="clbl">振替休日</span><span class="cval">${p.furikaeEvents.length}日分</span></div>`:''}
     ${p.travelEvents&&p.travelEvents.length?`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--green)">${p.travelEvents.map(t=>t.title).join(' / ')}</span></div>`:`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--text3)">なし</span></div>`}
     ${isPA?`<div class="crow"><span class="clbl">送信先</span><span class="cval" style="color:var(--accent)">${he(cfg.email)}</span></div>`:''}
@@ -2119,24 +2122,24 @@ function buildTravelEvents(baseDate, startTime, endTime, custName, travelMin){
 
   // 🏠→🏭 直行
   if(travelState.go){
-    events.push({title:'直行', memo:`自宅 → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
+    events.push({title:'直行', memo:`自宅 → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'workingElsewhere', fromTo:'go'});
   }
   // 🏭→🏠 直帰
   if(travelState.back){
-    events.push({title:'直帰', memo:`${custName} → 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
+    events.push({title:'直帰', memo:`${custName} → 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'workingElsewhere', fromTo:'back'});
   }
   // 🏢→🏭 出社から現場
   if(travelState.office){
-    events.push({title:'出社後移動', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
+    events.push({title:'出社後移動', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'workingElsewhere', fromTo:'office'});
   }
   // 🏭→🏢 帰社
   if(travelState.return){
-    events.push({title:'帰社', memo:`${custName} → ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
+    events.push({title:'帰社', memo:`${custName} → ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'workingElsewhere', fromTo:'return'});
   }
   // 🏭→🏭 現場移動（任意）
   const fromSite = document.getElementById('i-tr-from-site')?.value.trim();
   if(fromSite){
-    events.push({title:'現場移動', memo:`${fromSite} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
+    events.push({title:'現場移動', memo:`${fromSite} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'workingElsewhere', fromTo:'site'});
   }
   return events;
 }
@@ -2178,10 +2181,11 @@ function selShowAs(prefix, val, auto){
   if(prefix==='i'){ showAsI=val; if(!auto) showAsIManual=true; }
   else if(prefix==='att') showAsAtt=val;
   else showAsM=val;
-  ['free','busy','tentative'].forEach(v=>{
+  ['free','busy','tentative','woe'].forEach((v,i)=>{
+    const key = v==='woe' ? 'workingElsewhere' : v;
     const el=document.getElementById(prefix+'-sa-'+v);
     if(!el) return;
-    el.className='chip'+(v===val?' cb':'');
+    el.className='chip'+(key===val?' cb':'');
   });
 }
 
@@ -2510,7 +2514,7 @@ function buildTravel(){
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
-    location:cust, category:'移動', showAs:'free',
+    location:cust, category:'移動', showAs:'workingElsewhere',
     units:'', assign:'', work:'', prep:'', memo,
     travelEvents:[], rrule:'', isAllday:false,
     furikaeEvent:null, furikaeEvents:[],

@@ -1751,13 +1751,27 @@ function doSplitICS(payloads){
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(p.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(p.end)}\r\nSUMMARY:${escICS(p.title)}\r\n`;
     if(p.location) ev+=`LOCATION:${escICS(p.location)}\r\n`;
     if(p.memo)     ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
+    if(p.rrule)    ev+=`RRULE:${p.rrule}\r\n`;
     ev+=`TRANSP:${freeOrBusy(p.showAs)}\r\nEND:VEVENT\r\n`;
     return ev;
   }
   const bom='\uFEFF';
   let ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Scheduler//JP\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n`;
   ics+=`BEGIN:VTIMEZONE\r\nTZID:Asia/Tokyo\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0900\r\nTZOFFSETTO:+0900\r\nTZNAME:JST\r\nDTSTART:19700101T000000\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n`;
-  payloads.forEach(p=>{ ics+=makeEv(p); });
+  payloads.forEach(p=>{
+    ics+=makeEv(p);
+    // 移動予定
+    if(p.travelEvents&&p.travelEvents.length){
+      p.travelEvents.forEach(te=>{
+        ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(te.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(te.end)}\r\nSUMMARY:${escICS(te.title)}\r\nDESCRIPTION:${escICS(te.memo||'')}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+      });
+    }
+    // 振替休日
+    const fl=p.furikaeEvents&&p.furikaeEvents.length?p.furikaeEvents:(p.furikaeEvent?[p.furikaeEvent]:[]);
+    fl.forEach(fe=>{
+      ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo||'')}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+    });
+  });
   ics+=`END:VCALENDAR`;
   const b=new Blob([bom+ics],{type:'text/calendar;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);
@@ -2278,7 +2292,7 @@ function buildTravelEvents(baseDate, startTime, endTime, custName, travelMin){
   }
   // 🏢→🏭 出社から現場
   if(travelState.office){
-    events.push({title:'出社後移動', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'workingElsewhere', fromTo:'office'});
+    events.push({title:'移動', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'workingElsewhere', fromTo:'office'});
   }
   // 🏭→🏢 帰社
   if(travelState.return){
@@ -2580,7 +2594,7 @@ let tvState = {pattern:'go', custName:'', custId:''};
 const TV_TITLES = {
   go:     {title:'直行',      memo:(c,company)=>`自宅 → ${c}`},
   back:   {title:'直帰',      memo:(c,company)=>`${c} → 自宅`},
-  office: {title:'出社後移動', memo:(c,company)=>`${company} → ${c}`},
+  office: {title:'移動', memo:(c,company)=>`${company} → ${c}`},
   return: {title:'帰社',      memo:(c,company)=>`${c} → ${company}`},
   site:   {title:'現場移動',  memo:(c,company,from)=>`${from} → ${c}`},
   car:    {title:'車両持帰',  memo:(c,company)=>`車両持ち帰り（翌日直行用）`},
@@ -2822,7 +2836,7 @@ function buildSplitPayloads(base){
       const wEnd   = `${date}T${end}:00+09:00`;
       const fromSite = document.getElementById('i-tr-from-site')?.value.trim()||'前現場';
       if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'go'});
-      if(st.office) travelEvents.push({title:'出社後移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'office'});
+      if(st.office) travelEvents.push({title:'移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'office'});
       if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'site'});
       if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'back'});
       if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'return'});

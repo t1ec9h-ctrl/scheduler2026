@@ -2115,24 +2115,24 @@ function buildTravelEvents(baseDate, startTime, endTime, custName, travelMin){
 
   // 🏠→🏭 直行
   if(travelState.go){
-    events.push({title:'移動→', memo:`🏠 自宅 → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
+    events.push({title:'移動→', memo:`自宅 → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
   }
   // 🏭→🏠 直帰
   if(travelState.back){
-    events.push({title:'→移動', memo:`🏭 ${custName} → 🏠 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
+    events.push({title:'→移動', memo:`${custName} → 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
   }
   // 🏢→🏭 出社から現場
   if(travelState.office){
-    events.push({title:'移動→', memo:`🏢 ${company} → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
+    events.push({title:'移動→', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
   }
   // 🏭→🏢 帰社
   if(travelState.return){
-    events.push({title:'→移動', memo:`🏭 ${custName} → 🏢 ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
+    events.push({title:'→移動', memo:`${custName} → ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
   }
   // 🏭→🏭 現場移動（任意）
   const fromSite = document.getElementById('i-tr-from-site')?.value.trim();
   if(fromSite){
-    events.push({title:'移動', memo:`🏭 ${fromSite} → 🏭 ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
+    events.push({title:'移動', memo:`${fromSite} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
   }
   return events;
 }
@@ -2422,12 +2422,12 @@ function saveEditUnit(){
 let tvState = {pattern:'go', custName:'', custId:''};
 
 const TV_TITLES = {
-  go:     {title:'移動→',   memo:(c,company)=>`🏠 自宅 → 🏭 ${c}`},
-  back:   {title:'→移動',   memo:(c,company)=>`🏭 ${c} → 🏠 自宅`},
-  office: {title:'移動→',   memo:(c,company)=>`🏢 ${company} → 🏭 ${c}`},
-  return: {title:'→移動',   memo:(c,company)=>`🏭 ${c} → 🏢 ${company}`},
-  site:   {title:'移動',    memo:(c,company,from)=>`🏭 ${from} → 🏭 ${c}`},
-  car:    {title:'車両持帰', memo:(c,company)=>`🚗 車両持ち帰り（翌日直行用）`},
+  go:     {title:'移動→',   memo:(c,company)=>`自宅 → ${c}`},
+  back:   {title:'→移動',   memo:(c,company)=>`${c} → 自宅`},
+  office: {title:'移動→',   memo:(c,company)=>`${company} → ${c}`},
+  return: {title:'→移動',   memo:(c,company)=>`${c} → ${company}`},
+  site:   {title:'移動',    memo:(c,company,from)=>`${from} → ${c}`},
+  car:    {title:'車両持帰', memo:(c,company)=>`車両持ち帰り（翌日直行用）`},
 };
 
 function selTvPattern(el, pattern){

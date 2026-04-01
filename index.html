@@ -2115,24 +2115,24 @@ function buildTravelEvents(baseDate, startTime, endTime, custName, travelMin){
 
   // 🏠→🏭 直行
   if(travelState.go){
-    events.push({title:'移動→', memo:`自宅 → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
+    events.push({title:`直行 → ${custName}`, memo:`自宅 → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'go'});
   }
   // 🏭→🏠 直帰
   if(travelState.back){
-    events.push({title:'→移動', memo:`${custName} → 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
+    events.push({title:`直帰 ← ${custName}`, memo:`${custName} → 自宅`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'back'});
   }
   // 🏢→🏭 出社から現場
   if(travelState.office){
-    events.push({title:'移動→', memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
+    events.push({title:`出社 → ${custName}`, memo:`${company} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'office'});
   }
   // 🏭→🏢 帰社
   if(travelState.return){
-    events.push({title:'→移動', memo:`${custName} → ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
+    events.push({title:`帰社 ← ${custName}`, memo:`${custName} → ${company}`, start:workEnd, end:addMins(baseDate,endTime,travelMin), showAs:'free', fromTo:'return'});
   }
   // 🏭→🏭 現場移動（任意）
   const fromSite = document.getElementById('i-tr-from-site')?.value.trim();
   if(fromSite){
-    events.push({title:'移動', memo:`${fromSite} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
+    events.push({title:`移動 ${fromSite}→${custName}`, memo:`${fromSite} → ${custName}`, start:addMins(baseDate,startTime,-travelMin), end:workStart, showAs:'free', fromTo:'site'});
   }
   return events;
 }
@@ -2422,12 +2422,12 @@ function saveEditUnit(){
 let tvState = {pattern:'go', custName:'', custId:''};
 
 const TV_TITLES = {
-  go:     {title:'移動→',   memo:(c,company)=>`自宅 → ${c}`},
-  back:   {title:'→移動',   memo:(c,company)=>`${c} → 自宅`},
-  office: {title:'移動→',   memo:(c,company)=>`${company} → ${c}`},
-  return: {title:'→移動',   memo:(c,company)=>`${c} → ${company}`},
-  site:   {title:'移動',    memo:(c,company,from)=>`${from} → ${c}`},
-  car:    {title:'車両持帰', memo:(c,company)=>`車両持ち帰り（翌日直行用）`},
+  go:     {title:(c)=>`直行 → ${c}`,        memo:(c,company)=>`自宅 → ${c}`},
+  back:   {title:(c)=>`直帰 ← ${c}`,        memo:(c,company)=>`${c} → 自宅`},
+  office: {title:(c)=>`出社 → ${c}`,        memo:(c,company)=>`${company} → ${c}`},
+  return: {title:(c)=>`帰社 ← ${c}`,        memo:(c,company)=>`${c} → ${company}`},
+  site:   {title:(c,from)=>`移動 ${from}→${c}`, memo:(c,company,from)=>`${from} → ${c}`},
+  car:    {title:(c)=>`車両持帰`,            memo:(c,company)=>`車両持ち帰り（翌日直行用）`},
 };
 
 function selTvPattern(el, pattern){
@@ -2479,7 +2479,7 @@ function updateTvPreview(){
   const end  = document.getElementById('tv-end')?.value;
   if(!cust&&pat!=='car'){ document.getElementById('tv-title-preview').textContent='現場を選択してください'; return; }
   const t = TV_TITLES[pat];
-  const title = t.title;
+  const title = typeof t.title==='function' ? t.title(cust, from) : t.title;
   const memo  = t.memo(cust, company, from);
   const timeStr = start&&end ? `${start}〜${end}` : '';
   const DOW=['日','月','火','水','木','金','土'];
@@ -2502,7 +2502,7 @@ function buildTravel(){
   if(pat!=='car'&&!cust){ toast('⚠️ 現場を選択してください'); return null; }
   if(pat==='site'&&!from){ toast('⚠️ 移動元の現場名を入力してください'); return null; }
   const t     = TV_TITLES[pat];
-  const title = t.title;
+  const title = typeof t.title==='function' ? t.title(cust, from) : t.title;
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,

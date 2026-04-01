@@ -450,18 +450,40 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <label>移動時間（分）</label>
           <input type="number" id="i-travel-min" value="60" min="5" max="480" style="width:100px;text-align:center;">
         </div>
-        <div class="field">
-          <label>移動パターン（複数選択可）</label>
-          <div class="cg" style="flex-direction:column;gap:8px;">
-            <div class="chip" id="i-tr-go"     onclick="togTravel('go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
-            <div class="chip" id="i-tr-back"   onclick="togTravel('back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
-            <div class="chip" id="i-tr-office" onclick="togTravel('office')">🏢 → 🏭　出社から現場</div>
-            <div class="chip" id="i-tr-return" onclick="togTravel('return')">🏭 → 🏢　帰社</div>
+        <!-- 通常モード用 -->
+        <div id="i-travel-normal">
+          <div class="field">
+            <label>移動パターン（複数選択可）</label>
+            <div class="cg" style="flex-direction:column;gap:8px;">
+              <div class="chip" id="i-tr-go"     onclick="togTravel('go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
+              <div class="chip" id="i-tr-back"   onclick="togTravel('back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
+              <div class="chip" id="i-tr-office" onclick="togTravel('office')">🏢 → 🏭　出社から現場</div>
+              <div class="chip" id="i-tr-return" onclick="togTravel('return')">🏭 → 🏢　帰社</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>現場移動（任意）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">前の現場名を入力</span></label>
+            <input type="text" id="i-tr-from-site" placeholder="例：神戸電機㈱（空欄でスキップ）">
           </div>
         </div>
-        <div class="field" style="margin-bottom:0;">
-          <label>現場移動（任意）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">前の現場名を入力</span></label>
-          <input type="text" id="i-tr-from-site" placeholder="例：神戸電機㈱（空欄でスキップ）">
+        <!-- 分割モード用 -->
+        <div id="i-travel-split" style="display:none;">
+          <div class="field">
+            <label style="color:var(--accent);font-family:var(--mono);font-size:11px;">① 前半の移動</label>
+            <div class="cg" style="flex-direction:column;gap:6px;margin-top:6px;">
+              <div class="chip" id="i-tr-s1-go"     onclick="togSplitTravel(1,'go')"    >🏠 → 🏭　直行</div>
+              <div class="chip" id="i-tr-s1-office" onclick="togSplitTravel(1,'office')">🏢 → 🏭　出社後移動</div>
+              <div class="chip" id="i-tr-s1-back"   onclick="togSplitTravel(1,'back')"  >🏭 → 🏠　直帰（前半で終わる場合）</div>
+              <div class="chip" id="i-tr-s1-return" onclick="togSplitTravel(1,'return')">🏭 → 🏢　帰社（前半で終わる場合）</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label style="color:var(--green);font-family:var(--mono);font-size:11px;">② 後半の移動</label>
+            <div class="cg" style="flex-direction:column;gap:6px;margin-top:6px;">
+              <div class="chip" id="i-tr-s2-back"   onclick="togSplitTravel(2,'back')"  >🏭 → 🏠　直帰</div>
+              <div class="chip" id="i-tr-s2-return" onclick="togSplitTravel(2,'return')">🏭 → 🏢　帰社</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1376,8 +1398,15 @@ function goForm(fid,sub){
     showAsIManual=false; // 手動フラグリセット
     splitMode=false;
     const st=document.getElementById('i-split-tog');
-    if(st){st.checked=false;document.getElementById('i-normal-time').style.display='';document.getElementById('i-split-mode').style.display='none';}
+    if(st){
+      st.checked=false;
+      document.getElementById('i-normal-time').style.display='';
+      document.getElementById('i-split-mode').style.display='none';
+      document.getElementById('i-travel-normal').style.display='';
+      document.getElementById('i-travel-split').style.display='none';
+    }
     splitAssign={1:{abbr:'',type:'自社対応',showAs:'busy'},2:{abbr:'',type:'自社対応',showAs:'busy'}};
+    resetSplitTravel();
     const hl=document.getElementById('i-holiday-list');
     if(hl) hl.innerHTML='';
     const ft=document.getElementById('i-furikae-tog');
@@ -2695,10 +2724,12 @@ function togSplitMode(){
   splitMode = document.getElementById('i-split-tog').checked;
   document.getElementById('i-normal-time').style.display = splitMode ? 'none' : '';
   document.getElementById('i-split-mode').style.display  = splitMode ? '' : 'none';
+  document.getElementById('i-travel-normal').style.display = splitMode ? 'none' : '';
+  document.getElementById('i-travel-split').style.display  = splitMode ? '' : 'none';
   if(splitMode){
+    resetSplitTravel();
     updateSplitTravelSection();
   } else {
-    // 通常モードに戻したら担当区分に応じて移動セクションを再表示
     const travelSec = document.getElementById('i-travel-sec');
     if(travelSec) travelSec.style.display = iS.assignAbbr==='委' ? 'none' : '';
   }
@@ -2710,6 +2741,27 @@ function selSplitAssign(slot, el, c, abbr, type){
   el.classList.add(c);
   splitAssign[slot] = {abbr, type, showAs: abbr==='委' ? 'free' : 'busy'};
   updateSplitTravelSection();
+}
+
+// 分割モード用移動状態
+const splitTravelState = {
+  1: {go:false, back:false, office:false, return:false},
+  2: {go:false, back:false, office:false, return:false},
+};
+
+function togSplitTravel(slot, dir){
+  splitTravelState[slot][dir] = !splitTravelState[slot][dir];
+  const el = document.getElementById(`i-tr-s${slot}-${dir}`);
+  if(el) el.classList.toggle('cb', splitTravelState[slot][dir]);
+}
+
+function resetSplitTravel(){
+  [1,2].forEach(slot=>{
+    Object.keys(splitTravelState[slot]).forEach(dir=>{
+      splitTravelState[slot][dir] = false;
+      document.getElementById(`i-tr-s${slot}-${dir}`)?.classList.remove('cb');
+    });
+  });
 }
 
 function updateSplitTravelSection(){
@@ -2750,14 +2802,25 @@ function buildSplitPayloads(base){
     const workPart = work ? ` / ${work}` : '';
     const title    = `${tag}${custPart?' '+custPart:''}${workPart}`;
 
-    // 移動予定：委託でない場合のみ
-    // 直行は前半(slot1)の開始前、直帰は後半(slot2)の終了後
+    // 移動予定：分割モード用splitTravelStateを使う
     let travelEvents = [];
     if(abbr !== '委'){
-      if(slot===1) travelEvents = buildTravelEvents(date, start, end, iS.custName, travelMin)
-        .filter(e=>e.fromTo==='go'||e.fromTo==='office'||e.fromTo==='site');
-      if(slot===2) travelEvents = buildTravelEvents(date, start, end, iS.custName, travelMin)
-        .filter(e=>e.fromTo==='back'||e.fromTo==='return');
+      const st = splitTravelState[slot];
+      const company = cfg.company||'会社';
+      const pZ = n=>String(n).padStart(2,'0');
+      function addMinsLocal(dateStr, timeStr, mins){
+        const [y,m,d]=dateStr.split('-');
+        const [h,mn]=timeStr.split(':').map(Number);
+        const dt=new Date(Number(y),Number(m)-1,Number(d),h,mn);
+        dt.setMinutes(dt.getMinutes()+mins);
+        return `${dt.getFullYear()}-${pZ(dt.getMonth()+1)}-${pZ(dt.getDate())}T${pZ(dt.getHours())}:${pZ(dt.getMinutes())}:00+09:00`;
+      }
+      const wStart = `${date}T${start}:00+09:00`;
+      const wEnd   = `${date}T${end}:00+09:00`;
+      if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'go'});
+      if(st.office) travelEvents.push({title:'出社後移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'office'});
+      if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'back'});
+      if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'return'});
     }
 
     const memoFull = [

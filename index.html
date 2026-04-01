@@ -2695,6 +2695,13 @@ function togSplitMode(){
   splitMode = document.getElementById('i-split-tog').checked;
   document.getElementById('i-normal-time').style.display = splitMode ? 'none' : '';
   document.getElementById('i-split-mode').style.display  = splitMode ? '' : 'none';
+  if(splitMode){
+    updateSplitTravelSection();
+  } else {
+    // 通常モードに戻したら担当区分に応じて移動セクションを再表示
+    const travelSec = document.getElementById('i-travel-sec');
+    if(travelSec) travelSec.style.display = iS.assignAbbr==='委' ? 'none' : '';
+  }
   updateITitle();
 }
 
@@ -2702,16 +2709,33 @@ function selSplitAssign(slot, el, c, abbr, type){
   document.querySelectorAll(`#i-s${slot}-asgn .chip`).forEach(ch=>ch.className='chip');
   el.classList.add(c);
   splitAssign[slot] = {abbr, type, showAs: abbr==='委' ? 'free' : 'busy'};
+  updateSplitTravelSection();
+}
+
+function updateSplitTravelSection(){
+  if(!splitMode) return;
+  // 前半・後半どちらかが委託でない場合は移動セクション表示
+  const bothDelegate = splitAssign[1].abbr==='委' && splitAssign[2].abbr==='委';
+  const travelSec = document.getElementById('i-travel-sec');
+  if(travelSec) travelSec.style.display = bothDelegate ? 'none' : '';
+  if(bothDelegate){
+    // 全移動パターンをOFF
+    Object.keys(travelState).forEach(k=>{ travelState[k]=false; });
+    ['i-tr-go','i-tr-back','i-tr-office','i-tr-return'].forEach(id=>{
+      document.getElementById(id)?.classList.remove('cb');
+    });
+  }
 }
 
 function buildSplitPayloads(base){
-  // base: buildInspection()の結果をベースに使う
   const date    = document.getElementById('i-date').value;
   const endDate = document.getElementById('i-edate').value || date;
   const units   = base.units;
   const work    = base.work;
-  const catLabel= base.category;
   const memo    = document.getElementById('i-memo').value;
+  const travelMin = parseInt(document.getElementById('i-travel-min')?.value)||60;
+  const otherTxt  = document.getElementById('i-other-text')?.value.trim()||'';
+  const inspLabel = (iS.inspType==='その他'&&otherTxt) ? otherTxt : iS.inspType;
 
   const payloads = [];
   [1,2].forEach(slot=>{
@@ -2721,13 +2745,20 @@ function buildSplitPayloads(base){
     const abbr  = s.abbr;
     const type  = s.type;
 
-    // 件名生成
-    const otherTxt = document.getElementById('i-other-text')?.value.trim()||'';
-    const inspLabel = (iS.inspType==='その他'&&otherTxt) ? otherTxt : iS.inspType;
-    const tag = abbr ? `[${abbr}/${inspLabel}]` : `[${inspLabel}]`;
+    const tag      = abbr ? `[${abbr}/${inspLabel}]` : `[${inspLabel}]`;
     const custPart = iS.custName ? `${iS.custName}${units?`(${units})`:''}` : '';
     const workPart = work ? ` / ${work}` : '';
-    const title = `${tag}${custPart?' '+custPart:''}${workPart}`;
+    const title    = `${tag}${custPart?' '+custPart:''}${workPart}`;
+
+    // 移動予定：委託でない場合のみ
+    // 直行は前半(slot1)の開始前、直帰は後半(slot2)の終了後
+    let travelEvents = [];
+    if(abbr !== '委'){
+      if(slot===1) travelEvents = buildTravelEvents(date, start, end, iS.custName, travelMin)
+        .filter(e=>e.fromTo==='go'||e.fromTo==='office'||e.fromTo==='site');
+      if(slot===2) travelEvents = buildTravelEvents(date, start, end, iS.custName, travelMin)
+        .filter(e=>e.fromTo==='back'||e.fromTo==='return');
+    }
 
     const memoFull = [
       `【点検種別】${inspLabel}`,
@@ -2738,6 +2769,10 @@ function buildSplitPayloads(base){
       memo  ? `【備考】${memo}` : '',
     ].filter(Boolean).join('\n');
 
+    // 振替休日は後半に紐づける
+    const furikaeEvents = slot===2 ? (base.furikaeEvents||[]) : [];
+    const furikaeEvent  = slot===2 ? (base.furikaeEvent||null) : null;
+
     payloads.push({
       ...base,
       title,
@@ -2745,9 +2780,9 @@ function buildSplitPayloads(base){
       end:   `${endDate}T${end}:00+09:00`,
       showAs: s.showAs,
       memo: memoFull,
-      travelEvents: [],
-      furikaeEvent: null,
-      furikaeEvents: [],
+      travelEvents,
+      furikaeEvent,
+      furikaeEvents,
     });
   });
   return payloads;

@@ -740,7 +740,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <input type="text" id="add-cat-name" placeholder="分類名（例：点検・作業）" style="flex:1;">
           <button class="bmadd" onclick="addCategory()">追加</button>
         </div>
-        <div style="padding:0 16px 12px;font-size:11px;color:var(--text3);font-family:var(--mono);">※ Outlookの色分類名と一致させると自動で色がつきます</div>
+        <div style="padding:0 16px 12px;font-size:11px;color:var(--text3);font-family:var(--mono);">※ Power Automate方式のみ有効です。ICS方式では色分類は反映されません</div>
       </div>
     </div>
 
@@ -876,6 +876,15 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="ha">
         Power AutomateのOutlookイベント作成では繰り返しの設定が複雑なため、<strong>長期点検はICSダウンロード方式を推奨します。</strong><br>
         ICSファイルには繰り返しルール（平日のみ／毎日）が自動で含まれており、ダブルタップするだけで繰り返し予定が一括登録されます。
+      </div>
+
+      <div class="hq">Q. ICSで使っているけど色分類もしたい</div>
+      <div class="ha">
+        ICSファイルでは色分類は反映されません。色分類を使いたい予定だけPower Automate方式で送る方法があります：<br><br>
+        ① 設定タブで「Power Automate連携」と「ICSダウンロード」を<strong>両方ON</strong>にする<br>
+        ② フォームに「📨 メール送信」「📥 ICS保存」の2つのボタンが表示される<br>
+        ③ 色分類が必要な予定は「📨 メール送信」、それ以外は「📥 ICS保存」を使い分ける<br><br>
+        <span class="hnote">※ 設定タブで「🎨 色分類マスタ」の名前をOutlookの色分類名と完全一致させてください</span>
       </div>
 
       <div class="hq">Q. フローをメンバーに共有するには？</div>

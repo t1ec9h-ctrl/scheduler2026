@@ -538,6 +538,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip"     id="tv-p-office" onclick="selTvPattern(this,'office')">🏢 → 🏭　出社から現場</div>
           <div class="chip"     id="tv-p-return" onclick="selTvPattern(this,'return')">🏭 → 🏢　帰社</div>
           <div class="chip"     id="tv-p-site"   onclick="selTvPattern(this,'site')"  >🏭 → 🏭　現場移動</div>
+          <div class="chip"     id="tv-p-car"    onclick="selTvPattern(this,'car')"   >🚗 車両持ち帰り</div>
         </div>
       </div>
     </div>
@@ -2423,11 +2424,12 @@ function saveEditUnit(){
 let tvState = {pattern:'go', custName:'', custId:''};
 
 const TV_TITLES = {
-  go:     {title:'移動→', memo:(c,company)=>`🏠 自宅 → 🏭 ${c}`},
-  back:   {title:'→移動', memo:(c,company)=>`🏭 ${c} → 🏠 自宅`},
-  office: {title:'移動→', memo:(c,company)=>`🏢 ${company} → 🏭 ${c}`},
-  return: {title:'→移動', memo:(c,company)=>`🏭 ${c} → 🏢 ${company}`},
-  site:   {title:'移動',  memo:(c,company,from)=>`🏭 ${from} → 🏭 ${c}`},
+  go:     {title:'移動→',   memo:(c,company)=>`🏠 自宅 → 🏭 ${c}`},
+  back:   {title:'→移動',   memo:(c,company)=>`🏭 ${c} → 🏠 自宅`},
+  office: {title:'移動→',   memo:(c,company)=>`🏢 ${company} → 🏭 ${c}`},
+  return: {title:'→移動',   memo:(c,company)=>`🏭 ${c} → 🏢 ${company}`},
+  site:   {title:'移動',    memo:(c,company,from)=>`🏭 ${from} → 🏭 ${c}`},
+  car:    {title:'車両持帰', memo:(c,company)=>`🚗 車両持ち帰り（翌日直行用）`},
 };
 
 function selTvPattern(el, pattern){
@@ -2435,6 +2437,10 @@ function selTvPattern(el, pattern){
   el.classList.add('cb');
   tvState.pattern = pattern;
   document.getElementById('tv-from-field').style.display = pattern==='site' ? '' : 'none';
+  // 車両持ち帰りは現場名不要
+  const custSec = document.getElementById('tv-cust')?.closest('.sec');
+  if(custSec) custSec.style.display = pattern==='car' ? 'none' : '';
+  if(pattern==='car'){ tvState.custName=''; tvState.custId=''; }
   updateTvPreview();
 }
 
@@ -2473,7 +2479,7 @@ function updateTvPreview(){
   const date = document.getElementById('tv-date')?.value;
   const start= document.getElementById('tv-start')?.value;
   const end  = document.getElementById('tv-end')?.value;
-  if(!cust){ document.getElementById('tv-title-preview').textContent='現場を選択してください'; return; }
+  if(!cust&&pat!=='car'){ document.getElementById('tv-title-preview').textContent='現場を選択してください'; return; }
   const t = TV_TITLES[pat];
   const title = t.title;
   const memo  = t.memo(cust, company, from);
@@ -2495,7 +2501,7 @@ function buildTravel(){
   const from  = document.getElementById('tv-from-site')?.value.trim()||'';
   const company = cfg.company||'会社';
   if(!date){ toast('⚠️ 日付を入力してください'); return null; }
-  if(!cust){ toast('⚠️ 現場を選択してください'); return null; }
+  if(pat!=='car'&&!cust){ toast('⚠️ 現場を選択してください'); return null; }
   if(pat==='site'&&!from){ toast('⚠️ 移動元の現場名を入力してください'); return null; }
   const t     = TV_TITLES[pat];
   const title = t.title;

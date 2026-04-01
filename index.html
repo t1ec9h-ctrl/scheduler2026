@@ -2272,7 +2272,23 @@ const SORT_LABELS = {
 
 function loadSortOrders(){
   const saved = localStorage.getItem('sort_orders');
-  if(saved){ try{ const d=JSON.parse(saved); Object.assign(sortOrders,d); }catch(e){} }
+  if(saved){
+    try{
+      const d=JSON.parse(saved);
+      // 各カテゴリをマージ：保存済みの順番を維持しつつ新しいキーを末尾に追加
+      Object.keys(sortOrders).forEach(type=>{
+        if(d[type]){
+          const savedKeys = d[type];
+          const defaultKeys = sortOrders[type];
+          // 保存済みにない新キーを末尾に追加
+          const merged = [...savedKeys, ...defaultKeys.filter(k=>!savedKeys.includes(k))];
+          // デフォルトに存在しないキーは除去
+          sortOrders[type] = merged.filter(k=>defaultKeys.includes(k));
+        }
+      });
+      if(d.cfg) cfg=d.cfg; // 旧形式互換
+    }catch(e){}
+  }
 }
 function saveSortOrders(){
   localStorage.setItem('sort_orders', JSON.stringify(sortOrders));

@@ -370,15 +370,57 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <div class="sec">
-      <div class="sh"><div class="st">日時</div></div>
+      <div class="sh">
+        <div class="st">日時</div>
+        <div class="tw">
+          <span class="tl" id="i-split-lbl" style="font-size:10px;">分割登録</span>
+          <label class="tog"><input type="checkbox" id="i-split-tog" onchange="togSplitMode()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
       <div class="sb">
         <div class="fr">
           <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
           <div class="field"><label>終了予定日</label><input type="date" id="i-edate"></div>
         </div>
-        <div class="fr">
-          <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
-          <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
+        <!-- 通常モード -->
+        <div id="i-normal-time">
+          <div class="fr">
+            <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
+            <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
+          </div>
+        </div>
+        <!-- 分割モード -->
+        <div id="i-split-mode" style="display:none;">
+          <div style="background:var(--adim);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--accent);font-family:var(--mono);margin-bottom:8px;">① 前半</div>
+            <div class="fr" style="margin-bottom:8px;">
+              <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s1-start" value="09:00"></div>
+              <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s1-end" value="13:00"></div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>担当区分</label>
+              <div class="cg" id="i-s1-asgn">
+                <div class="chip cb"  onclick="selSplitAssign(1,this,'cb','','自社対応')">🔵 自社</div>
+                <div class="chip"     onclick="selSplitAssign(1,this,'co','委','協力会社委託')">🟠 委託</div>
+                <div class="chip"     onclick="selSplitAssign(1,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--gdim);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:11px;color:var(--green);font-family:var(--mono);margin-bottom:8px;">② 後半</div>
+            <div class="fr" style="margin-bottom:8px;">
+              <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s2-start" value="13:00"></div>
+              <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s2-end" value="17:00"></div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>担当区分</label>
+              <div class="cg" id="i-s2-asgn">
+                <div class="chip cb"  onclick="selSplitAssign(2,this,'cb','','自社対応')">🔵 自社</div>
+                <div class="chip"     onclick="selSplitAssign(2,this,'co','委','協力会社委託')">🟠 委託</div>
+                <div class="chip"     onclick="selSplitAssign(2,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1332,6 +1374,10 @@ function goForm(fid,sub){
     furikaeDates=[];
     renderFurikaeDates();
     showAsIManual=false; // 手動フラグリセット
+    splitMode=false;
+    const st=document.getElementById('i-split-tog');
+    if(st){st.checked=false;document.getElementById('i-normal-time').style.display='';document.getElementById('i-split-mode').style.display='none';}
+    splitAssign={1:{abbr:'',type:'自社対応',showAs:'busy'},2:{abbr:'',type:'自社対応',showAs:'busy'}};
     const hl=document.getElementById('i-holiday-list');
     if(hl) hl.innerHTML='';
     const ft=document.getElementById('i-furikae-tog');
@@ -1614,6 +1660,19 @@ function buildInspection(){
 // ===== Trigger & Confirm =====
 function triggerSend(formType,action){
   if(action==='pa'&&!cfg.email){toast('⚠️ 設定タブでメールアドレスを入力してください');navTo('settings');return;}
+  // 分割登録モード
+  if((formType==='inspection'||formType==='i') && splitMode){
+    const base = buildInspection();
+    if(!base) return;
+    const payloads = buildSplitPayloads(base);
+    pendingAction = action;
+    if(action==='ics'){
+      doSplitICS(payloads);
+    } else {
+      doSplitMailto(payloads);
+    }
+    return;
+  }
   const p=(formType==='meeting'||formType==='m')?buildMeeting():(formType==='attendance'||formType==='att')?buildAttendance():(formType==='travel'||formType==='tv')?buildTravel():buildInspection();
   if(!p)return;
   pending=p;pendingAction=action;
@@ -1648,6 +1707,42 @@ function doMailto(){
   const p=pending;
   const subject=encodeURIComponent('SCHED: '+p.title);
   const body=encodeURIComponent(JSON.stringify(p,null,2));
+  window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
+  toast('✅ メールアプリが開きます。送信ボタンを押してください！');
+}
+
+// ===== Split send =====
+function doSplitICS(payloads){
+  const pZ2=n=>String(n).padStart(2,'0');
+  const freeOrBusy=sa=>sa==='free'?'TRANSPARENT':'OPAQUE';
+  function makeEv(p){
+    let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(p.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(p.end)}\r\nSUMMARY:${escICS(p.title)}\r\n`;
+    if(p.location) ev+=`LOCATION:${escICS(p.location)}\r\n`;
+    if(p.memo)     ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
+    ev+=`TRANSP:${freeOrBusy(p.showAs)}\r\nEND:VEVENT\r\n`;
+    return ev;
+  }
+  const bom='\uFEFF';
+  let ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Scheduler//JP\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n`;
+  ics+=`BEGIN:VTIMEZONE\r\nTZID:Asia/Tokyo\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0900\r\nTZOFFSETTO:+0900\r\nTZNAME:JST\r\nDTSTART:19700101T000000\r\nEND:STANDARD\r\nEND:VTIMEZONE\r\n`;
+  payloads.forEach(p=>{ ics+=makeEv(p); });
+  ics+=`END:VCALENDAR`;
+  const b=new Blob([bom+ics],{type:'text/calendar;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);
+  a.download=`${payloads[0].title.replace(/[/\\:*?"<>|]/g,'_').slice(0,40)}_分割.ics`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast('✅ 2件分のICSをダウンロードしました');
+  closeModal();
+}
+
+function doSplitMailto(payloads){
+  // 2件まとめてJSONで送る
+  const combined = {split:true, events: payloads.map(p=>({
+    title:p.title, start:p.start, end:p.end,
+    location:p.location, category:p.category, showAs:p.showAs, memo:p.memo
+  }))};
+  const subject = encodeURIComponent('SCHED: ' + payloads.map(p=>p.title).join(' / '));
+  const body    = encodeURIComponent(JSON.stringify(combined,null,2));
   window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
   toast('✅ メールアプリが開きます。送信ボタンを押してください！');
 }
@@ -2587,6 +2682,75 @@ function continueInspection(){
   // 画面上部にスクロール
   document.getElementById('app-body').scrollTop=0;
   toast('✅ 現場・号機・日付を引き継ぎました。担当区分と時間を変更してください。');
+}
+
+// ===== 分割登録モード =====
+let splitMode = false;
+let splitAssign = {
+  1: {abbr:'', type:'自社対応', showAs:'busy'},
+  2: {abbr:'', type:'自社対応', showAs:'busy'},
+};
+
+function togSplitMode(){
+  splitMode = document.getElementById('i-split-tog').checked;
+  document.getElementById('i-normal-time').style.display = splitMode ? 'none' : '';
+  document.getElementById('i-split-mode').style.display  = splitMode ? '' : 'none';
+  updateITitle();
+}
+
+function selSplitAssign(slot, el, c, abbr, type){
+  document.querySelectorAll(`#i-s${slot}-asgn .chip`).forEach(ch=>ch.className='chip');
+  el.classList.add(c);
+  splitAssign[slot] = {abbr, type, showAs: abbr==='委' ? 'free' : 'busy'};
+}
+
+function buildSplitPayloads(base){
+  // base: buildInspection()の結果をベースに使う
+  const date    = document.getElementById('i-date').value;
+  const endDate = document.getElementById('i-edate').value || date;
+  const units   = base.units;
+  const work    = base.work;
+  const catLabel= base.category;
+  const memo    = document.getElementById('i-memo').value;
+
+  const payloads = [];
+  [1,2].forEach(slot=>{
+    const s     = splitAssign[slot];
+    const start = document.getElementById(`i-s${slot}-start`).value || (slot===1?'09:00':'13:00');
+    const end   = document.getElementById(`i-s${slot}-end`).value   || (slot===1?'13:00':'17:00');
+    const abbr  = s.abbr;
+    const type  = s.type;
+
+    // 件名生成
+    const otherTxt = document.getElementById('i-other-text')?.value.trim()||'';
+    const inspLabel = (iS.inspType==='その他'&&otherTxt) ? otherTxt : iS.inspType;
+    const tag = abbr ? `[${abbr}/${inspLabel}]` : `[${inspLabel}]`;
+    const custPart = iS.custName ? `${iS.custName}${units?`(${units})`:''}` : '';
+    const workPart = work ? ` / ${work}` : '';
+    const title = `${tag}${custPart?' '+custPart:''}${workPart}`;
+
+    const memoFull = [
+      `【点検種別】${inspLabel}`,
+      `【担当】${type}`,
+      units ? `【号機】${units}` : '',
+      work  ? `【作業内容】${work}` : '',
+      `【時間帯】${slot===1?'前半':'後半'} ${start}〜${end}`,
+      memo  ? `【備考】${memo}` : '',
+    ].filter(Boolean).join('\n');
+
+    payloads.push({
+      ...base,
+      title,
+      start: `${date}T${start}:00+09:00`,
+      end:   `${endDate}T${end}:00+09:00`,
+      showAs: s.showAs,
+      memo: memoFull,
+      travelEvents: [],
+      furikaeEvent: null,
+      furikaeEvents: [],
+    });
+  });
+  return payloads;
 }
 
 function togHelp(btn){

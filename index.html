@@ -480,6 +480,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="field" style="margin-bottom:0;">
             <label style="color:var(--green);font-family:var(--mono);font-size:11px;">② 後半の移動</label>
             <div class="cg" style="flex-direction:column;gap:6px;margin-top:6px;">
+              <div class="chip" id="i-tr-s2-go"     onclick="togSplitTravel(2,'go')"    >🏠 → 🏭　直行（自宅から後半現場）</div>
+              <div class="chip" id="i-tr-s2-office" onclick="togSplitTravel(2,'office')">🏢 → 🏭　出社後移動</div>
+              <div class="chip" id="i-tr-s2-site"   onclick="togSplitTravel(2,'site')"  >🏭 → 🏭　前半現場から後半現場</div>
               <div class="chip" id="i-tr-s2-back"   onclick="togSplitTravel(2,'back')"  >🏭 → 🏠　直帰</div>
               <div class="chip" id="i-tr-s2-return" onclick="togSplitTravel(2,'return')">🏭 → 🏢　帰社</div>
             </div>
@@ -2745,8 +2748,8 @@ function selSplitAssign(slot, el, c, abbr, type){
 
 // 分割モード用移動状態
 const splitTravelState = {
-  1: {go:false, back:false, office:false, return:false},
-  2: {go:false, back:false, office:false, return:false},
+  1: {go:false, back:false, office:false, return:false, site:false},
+  2: {go:false, back:false, office:false, return:false, site:false},
 };
 
 function togSplitTravel(slot, dir){
@@ -2817,8 +2820,10 @@ function buildSplitPayloads(base){
       }
       const wStart = `${date}T${start}:00+09:00`;
       const wEnd   = `${date}T${end}:00+09:00`;
+      const fromSite = document.getElementById('i-tr-from-site')?.value.trim()||'前現場';
       if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'go'});
       if(st.office) travelEvents.push({title:'出社後移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'office'});
+      if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'free', fromTo:'site'});
       if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'back'});
       if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'free', fromTo:'return'});
     }

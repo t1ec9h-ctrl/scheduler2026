@@ -1674,7 +1674,8 @@ function doICS(){
     ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo)}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
   });
   ics+=`END:VCALENDAR`;
-  const b=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+  const bom='\uFEFF'; // BOM付きUTF-8（Outlookの絵文字文字化け対策）
+  const b=new Blob([bom+ics],{type:'text/calendar;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);
   a.download=`${p.title.replace(/[/\\:*?"<>|]/g,'_').slice(0,50)}.ics`;
   a.click();URL.revokeObjectURL(a.href);

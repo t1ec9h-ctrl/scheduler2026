@@ -274,13 +274,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
     </div>
-    <div class="sec" id="m-att-sec">
-      <div class="sh"><div class="st">参加者</div></div>
-      <div class="sb">
-        <div class="lrows" id="m-att-rows"><div class="lr"><input type="text" placeholder="氏名"><button class="bdel" onclick="delRow(this)">×</button></div></div>
-        <button class="badd" onclick="addRow('m-att-rows','氏名')">＋ 参加者を追加</button>
-      </div>
-    </div>
+
     <div class="sec">
       <div class="sh">
         <div class="st">事前準備</div>
@@ -1463,9 +1457,9 @@ function goForm(fid,sub){
     showScreen('attendance');
     return;
   }
-  if(sub==='task'){setChipIdx('mt-chips',2,'co','個人タスク');document.getElementById('m-att-sec').style.display='none';}
-  else if(sub==='other'){setChipIdx('mt-chips',3,'cp','その他');document.getElementById('m-att-sec').style.display='';}
-  else{document.getElementById('m-att-sec').style.display='';}
+  if(sub==='task'){setChipIdx('mt-chips',2,'co','個人タスク');}
+  else if(sub==='other'){setChipIdx('mt-chips',3,'cp','その他');}
+  
   showScreen(fid);
 }
 function goBack(){showScreen('select');}
@@ -1613,7 +1607,7 @@ function buildMeeting(){
   const end=document.getElementById('m-end').value||'11:00';
   const loc=document.getElementById('m-loc').value;
   const agenda=document.getElementById('m-agenda').value;
-  const atts=Array.from(document.querySelectorAll('#m-att-rows input')).map(i=>i.value.trim()).filter(Boolean);
+  const atts=[];
   const prepOn=document.getElementById('m-pt').checked;
   const todos=Array.from(document.querySelectorAll('#m-todo-rows input')).map(i=>i.value.trim()).filter(Boolean);
   const pDays=parseInt(document.getElementById('m-pd').value)||1;

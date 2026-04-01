@@ -332,7 +332,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <div class="field">
           <label>お客さま<span class="req">*</span></label>
           <div class="cr2">
-            <select id="i-cust" onchange="onCustChange()"><option value="">— 選択 —</option></select>
+            <select id="i-cust" onchange="onCustChange()" oninput="onCustChange()"><option value="">— 選択 —</option></select>
             <button class="birr" onclick="openIrr()">✏️</button>
           </div>
         </div>
@@ -552,7 +552,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <div class="field">
           <label>現場名<span class="req">*</span></label>
           <div class="cr2">
-            <select id="tv-cust" onchange="onTvCustChange()"><option value="">— 選択 —</option></select>
+            <select id="tv-cust" onchange="onTvCustChange()" oninput="onTvCustChange()"><option value="">— 選択 —</option></select>
             <button class="birr" onclick="openTvIrr()">✏️</button>
           </div>
         </div>
@@ -910,6 +910,16 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 
       <div class="hq">Q. iPhoneでメールを送ると何のアプリが開く？</div>
       <div class="ha">iPhoneの標準メールアプリが開きます。会社のOutlookアカウントをiPhoneのメールアプリに登録しておくと、そのまま送信できます。設定 →「Outlook」→「デフォルトのメールアプリ」でOutlookアプリに変更することもできます。</div>
+
+      <div class="hq">Q. iPhoneでICSをダウンロードするとiOS標準カレンダーに入ってしまう</div>
+      <div class="ha">
+        iOSの仕様です。ICSファイルはiPhoneの標準カレンダーアプリが優先的に処理するため、OutlookカレンダーではなくiOS標準カレンダーに登録されます。<br><br>
+        <strong>iPhoneからOutlookに登録するには Power Automate方式を使ってください：</strong><br>
+        ① 設定タブで「Power Automate連携」をONにしてメールアドレスを入力<br>
+        ② 「📨 メール送信」ボタンを押す<br>
+        ③ メールアプリが開くので送信するだけ<br><br>
+        <span class="hnote">※ ICS方式はPCからOutlookに直接登録する場合に使ってください</span>
+      </div>
     </div>
   </div>
 
@@ -1425,6 +1435,8 @@ function onCustChange(){
   const s=document.getElementById('i-cust');
   iS.custId=s.value;iS.custName=s.options[s.selectedIndex]?.text||'';
   iS.selUnits=[];iS.irrNames=[];renderUnitChips();updateITitle();
+  // iOS対策：レンダリング遅延後に再更新
+  setTimeout(()=>{ updateITitle(); }, 100);
 }
 function renderUnitChips(){
   const g=document.getElementById('i-ug');

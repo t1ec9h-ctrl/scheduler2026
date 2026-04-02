@@ -704,7 +704,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="field-row fr">
           <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
-          <div class="field" id="att-end-date-field" style="display:none;"><label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休時</span></label><input type="date" id="att-end-date" oninput="updateAttPreview()"></div>
+          <div class="field" id="att-end-date-field" style="display:none;">
+            <label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休・連続勤務時</span></label>
+            <input type="date" id="att-end-date" oninput="updateAttPreview()">
+          </div>
+        </div>
+        <!-- 繰り返し（社内勤務・休日出勤用） -->
+        <div id="att-rec-field" style="display:none;">
+          <div class="field" style="margin-bottom:0;">
+            <div class="tw">
+              <span style="font-size:13px;color:var(--text2);">📅 平日のみ繰り返し</span>
+              <label class="tog"><input type="checkbox" id="att-rec-tog" onchange="togAttRec()"><div class="tt"></div><div class="tth"></div></label>
+            </div>
+            <div id="att-rec-preview" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;display:none;">終了日を入力すると繰り返し登録されます（土日祝除く）</div>
+          </div>
         </div>
         <!-- 時間（終日以外） -->
         <div id="att-time-row" style="display:none;">
@@ -1477,6 +1490,12 @@ function goForm(fid,sub){
     document.getElementById('att-end-date').value='';
     const aef=document.getElementById('att-end-date-field');
     if(aef) aef.style.display='none';
+    const arf=document.getElementById('att-rec-field');
+    if(arf) arf.style.display='none';
+    const art=document.getElementById('att-rec-tog');
+    if(art) art.checked=false;
+    const arp=document.getElementById('att-rec-preview');
+    if(arp) arp.style.display='none';
     document.getElementById('att-memo').value='';
     // 種別を有休にリセット
     const chips=document.querySelectorAll('#att-type-chips .chip');
@@ -2108,10 +2127,14 @@ function selAttType(el, type, mode){
     document.getElementById('att-end').value   = def.end;
     selShowAs('att', def.showAs);
   }
-  // 終了日欄は有休・振替休日のみ表示（連休対応）
+  // 終了日欄：有休・振替休日・社内勤務・休日出勤で表示
+  const showEndDate = ['有休','振替休日','社内勤務','休日出勤'].includes(type);
   const endField = document.getElementById('att-end-date-field');
-  if(endField) endField.style.display = (type==='有休'||type==='振替休日') ? '' : 'none';
-  if(endField && endField.style.display==='none') document.getElementById('att-end-date').value='';
+  if(endField) endField.style.display = showEndDate ? '' : 'none';
+  if(endField && !showEndDate) document.getElementById('att-end-date').value='';
+  // 繰り返しオプション：社内勤務・休日出勤のみ
+  const recField = document.getElementById('att-rec-field');
+  if(recField) recField.style.display = ['社内勤務','休日出勤'].includes(type) ? '' : 'none';
   // 休日出勤のとき振替休日セクションを表示
   const furikaeSec = document.getElementById('att-furikae-sec');
   if(furikaeSec) furikaeSec.style.display = type==='休日出勤' ? '' : 'none';
@@ -2237,6 +2260,13 @@ function renderFurikaeDates(){
   });
 }
 
+function togAttRec(){
+  const on = document.getElementById('att-rec-tog').checked;
+  const prev = document.getElementById('att-rec-preview');
+  if(prev) prev.style.display = on ? '' : 'none';
+  updateAttPreview();
+}
+
 function togFurikae(){
   const on = document.getElementById('att-furikae-tog').checked;
   document.getElementById('att-furikae-body').classList.toggle('open', on);
@@ -2297,6 +2327,14 @@ function buildAttendance(){
     startDT = `${date}T${startT}:00+09:00`;
     endDT   = `${endDate}T${endT}:00+09:00`;
   }
+  // 繰り返し（社内勤務・休日出勤）
+  let attRrule = '';
+  const attRecOn  = document.getElementById('att-rec-tog')?.checked;
+  const attEndDate = document.getElementById('att-end-date')?.value;
+  if(attRecOn && attEndDate && ['社内勤務','休日出勤'].includes(type)){
+    attRrule = `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=${attEndDate.replace(/-/g,'')}T235959Z`;
+  }
+
   // 振替休日
   const furikaeOn   = document.getElementById('att-furikae-tog')?.checked;
   const furikaeDate = document.getElementById('att-furikae-date')?.value;
@@ -2317,7 +2355,7 @@ function buildAttendance(){
   }
   return{title:type, start:startDT, end:endDT, location:'', category:catLabel,
          showAs:showAsAtt, units:'', assign:'', work:'', prep:'', memo,
-         travelEvents:[], rrule:'', isAllday:allday, furikaeEvent,
+         travelEvents:[], rrule:attRrule, isAllday:allday, furikaeEvent,
          furikaeEvents: furikaeEvent ? [furikaeEvent] : [],
          travelGoStart:'',travelGoEnd:'',travelGoMemo:'',
          travelBackStart:'',travelBackEnd:'',travelBackMemo:'',

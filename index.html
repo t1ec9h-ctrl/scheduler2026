@@ -376,13 +376,19 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="fr">
           <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
-          <div class="field"><label>終了予定日</label><input type="date" id="i-edate"></div>
+          <div class="field"><label>終了予定日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">長期のみ</span></label><input type="date" id="i-edate"></div>
         </div>
         <!-- 通常モード -->
         <div id="i-normal-time">
           <div class="fr">
             <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
-            <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
+            <div class="field">
+              <label style="display:flex;align-items:center;gap:6px;">
+                終了
+                <button onclick="setNextDayEnd()" style="background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:2px 8px;font-size:10px;color:var(--text2);cursor:pointer;font-family:var(--mono);">🌙 日またぎ</button>
+              </label>
+              <input type="time" id="i-end" value="17:00">
+            </div>
           </div>
         </div>
         <!-- 分割モード -->
@@ -531,7 +537,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 表示方法 -->
-    <div class="sec">
+    <div class="sec" id="i-showas-sec">
       <div class="sh">
         <div class="st">📅 Outlook 表示方法</div>
         <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">担当区分で自動設定</div>
@@ -549,7 +555,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 色分類 -->
-    <div class="sec">
+    <div class="sec" id="i-cat-sec">
       <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cat-chips" id="i-cat-chips">
@@ -2862,6 +2868,11 @@ function togSplitMode(){
   document.getElementById('i-split-mode').style.display  = splitMode ? '' : 'none';
   document.getElementById('i-travel-normal').style.display = splitMode ? 'none' : '';
   document.getElementById('i-travel-split').style.display  = splitMode ? '' : 'none';
+  // 分割モード時は通常の表示方法・色分類を非表示（各スロット内で設定）
+  const showAsSec = document.getElementById('i-showas-sec');
+  const catSec    = document.getElementById('i-cat-sec');
+  if(showAsSec) showAsSec.style.display = splitMode ? 'none' : '';
+  if(catSec)    catSec.style.display    = splitMode ? 'none' : '';
   if(splitMode){
     resetSplitTravel();
     updateSplitTravelSection();
@@ -3004,6 +3015,20 @@ function buildSplitPayloads(base){
 
 function showAsLabel(v){
   return {'free':'空き時間','tentative':'仮の予定','oof':'外出中','workingElsewhere':'他の場所で作業'}[v]||'予定あり';
+}
+
+// 夜間作業（日またぎ）：終了予定日を翌日に自動設定
+function setNextDayEnd(){
+  const date = document.getElementById('i-date').value;
+  if(!date){ toast('⚠️ 作業日を入力してください'); return; }
+  const d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  const next = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('i-edate').value = next;
+  // 開始を夜、終了を翌朝に設定
+  document.getElementById('i-start').value = '22:00';
+  document.getElementById('i-end').value   = '06:00';
+  toast('✅ 翌日設定にしました（22:00〜翌06:00）');
 }
 
 function togHelp(btn){

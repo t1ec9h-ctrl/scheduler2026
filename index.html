@@ -393,12 +393,21 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
               <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s1-start" value="09:00"></div>
               <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s1-end" value="13:00"></div>
             </div>
-            <div class="field" style="margin-bottom:0;">
+            <div class="field">
               <label>担当区分</label>
               <div class="cg" id="i-s1-asgn">
                 <div class="chip cb"  onclick="selSplitAssign(1,this,'cb','','自社対応')">🔵 自社</div>
                 <div class="chip"     onclick="selSplitAssign(1,this,'co','委','協力会社委託')">🟠 委託</div>
                 <div class="chip"     onclick="selSplitAssign(1,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>表示方法</label>
+              <div class="cg" id="i-s1-showas" style="flex-wrap:wrap;">
+                <div class="chip" id="i-s1-sa-free" onclick="selSplitShowAs(1,'free')">空き時間</div>
+                <div class="chip cb" id="i-s1-sa-busy" onclick="selSplitShowAs(1,'busy')">予定あり</div>
+                <div class="chip" id="i-s1-sa-tentative" onclick="selSplitShowAs(1,'tentative')">仮の予定</div>
+                <div class="chip" id="i-s1-sa-oof" onclick="selSplitShowAs(1,'oof')">外出中</div>
               </div>
             </div>
           </div>
@@ -408,12 +417,21 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
               <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s2-start" value="13:00"></div>
               <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s2-end" value="17:00"></div>
             </div>
-            <div class="field" style="margin-bottom:0;">
+            <div class="field">
               <label>担当区分</label>
               <div class="cg" id="i-s2-asgn">
                 <div class="chip cb"  onclick="selSplitAssign(2,this,'cb','','自社対応')">🔵 自社</div>
                 <div class="chip"     onclick="selSplitAssign(2,this,'co','委','協力会社委託')">🟠 委託</div>
                 <div class="chip"     onclick="selSplitAssign(2,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>表示方法</label>
+              <div class="cg" id="i-s2-showas" style="flex-wrap:wrap;">
+                <div class="chip" id="i-s2-sa-free" onclick="selSplitShowAs(2,'free')">空き時間</div>
+                <div class="chip cb" id="i-s2-sa-busy" onclick="selSplitShowAs(2,'busy')">予定あり</div>
+                <div class="chip" id="i-s2-sa-tentative" onclick="selSplitShowAs(2,'tentative')">仮の予定</div>
+                <div class="chip" id="i-s2-sa-oof" onclick="selSplitShowAs(2,'oof')">外出中</div>
               </div>
             </div>
           </div>
@@ -1433,7 +1451,13 @@ function goForm(fid,sub){
       document.getElementById('i-travel-normal').style.display='';
       document.getElementById('i-travel-split').style.display='none';
     }
-    splitAssign={1:{abbr:'',type:'自社対応',showAs:'busy'},2:{abbr:'',type:'自社対応',showAs:'busy'}};
+    splitAssign={1:{abbr:'',type:'自社対応',showAs:'busy',showAsManual:false},2:{abbr:'',type:'自社対応',showAs:'busy',showAsManual:false}};
+    ['1','2'].forEach(s=>{
+      ['free','busy','tentative','oof'].forEach(v=>{
+        const el=document.getElementById(`i-s${s}-sa-${v}`);
+        if(el) el.className='chip'+(v==='busy'?' cb':'');
+      });
+    });
     resetSplitTravel();
     const hl=document.getElementById('i-holiday-list');
     if(hl) hl.innerHTML='';
@@ -2848,10 +2872,23 @@ function togSplitMode(){
   updateITitle();
 }
 
+function selSplitShowAs(slot, val){
+  splitAssign[slot].showAs = val;
+  splitAssign[slot].showAsManual = true;
+  ['free','busy','tentative','oof'].forEach(v=>{
+    const el = document.getElementById(`i-s${slot}-sa-${v}`);
+    if(el) el.className = 'chip' + (v===val?' cb':'');
+  });
+}
+
 function selSplitAssign(slot, el, c, abbr, type){
   document.querySelectorAll(`#i-s${slot}-asgn .chip`).forEach(ch=>ch.className='chip');
   el.classList.add(c);
-  splitAssign[slot] = {abbr, type, showAs: abbr==='委' ? 'free' : 'busy'};
+  // 手動でshowAsが変更されていない場合のみ自動設定
+  const manual = splitAssign[slot]?.showAsManual || false;
+  const autoShowAs = abbr==='委' ? 'free' : 'busy';
+  splitAssign[slot] = {abbr, type, showAs: manual ? splitAssign[slot].showAs : autoShowAs, showAsManual: manual};
+  if(!manual) selSplitShowAs(slot, autoShowAs);
   updateSplitTravelSection();
 }
 

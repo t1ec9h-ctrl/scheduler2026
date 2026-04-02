@@ -300,6 +300,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
           <div class="chip cb" id="m-sa-busy" onclick="selShowAs('m','busy')">🔳 予定あり</div>
           <div class="chip" id="m-sa-tentative" onclick="selShowAs('m','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="m-sa-oof" onclick="selShowAs('m','oof')">外出中</div>
+          <div class="chip" id="m-sa-workingElsewhere" onclick="selShowAs('m','workingElsewhere')">他の場所で作業</div>
           <div class="chip" id="m-sa-woe" onclick="selShowAs('m','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
@@ -521,6 +523,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="i-sa-free" onclick="selShowAs('i','free')">🔲 空き時間</div>
           <div class="chip cb" id="i-sa-busy" onclick="selShowAs('i','busy')">🔳 予定あり</div>
           <div class="chip" id="i-sa-tentative" onclick="selShowAs('i','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="i-sa-oof" onclick="selShowAs('i','oof')">外出中</div>
+          <div class="chip" id="i-sa-workingElsewhere" onclick="selShowAs('i','workingElsewhere')">他の場所で作業</div>
           <div class="chip" id="i-sa-woe" onclick="selShowAs('i','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
@@ -735,6 +739,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="att-sa-free"      onclick="selShowAs('att','free')">🔲 空き時間</div>
           <div class="chip cb" id="att-sa-busy"   onclick="selShowAs('att','busy')">🔳 予定あり</div>
           <div class="chip" id="att-sa-tentative" onclick="selShowAs('att','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="att-sa-oof" onclick="selShowAs('att','oof')">外出中</div>
+          <div class="chip" id="att-sa-workingElsewhere" onclick="selShowAs('att','workingElsewhere')">他の場所で作業</div>
           <div class="chip" id="att-sa-woe" onclick="selShowAs('att','workingElsewhere')">🚗 外出中</div>
         </div>
       </div>
@@ -1744,7 +1750,7 @@ function triggerSend(formType,action){
     <div class="crow"><span class="clbl">日時</span><span class="cval">${dtStr}</span></div>
     ${p.location?`<div class="crow"><span class="clbl">場所</span><span class="cval">${he(p.location)}</span></div>`:''}
     ${prepStr?`<div class="crow"><span class="clbl">準備期限</span><span class="cval">${prepStr}</span></div>`:''}
-    <div class="crow"><span class="clbl">表示方法</span><span class="cval">${p.showAs==='free'?'🔲 空き時間':p.showAs==='tentative'?'❓ 仮の予定':p.showAs==='workingElsewhere'?'🚗 外出中':'🔳 予定あり'}</span></div>
+    <div class="crow"><span class="clbl">表示方法</span><span class="cval">${showAsLabel(p.showAs)}[p.showAs]||'予定あり'</span></div>
     ${p.furikaeEvents&&p.furikaeEvents.length?`<div class="crow"><span class="clbl">振替休日</span><span class="cval">${p.furikaeEvents.length}日分</span></div>`:''}
     ${p.travelEvents&&p.travelEvents.length?`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--green)">${p.travelEvents.map(t=>t.title).join(' / ')}</span></div>`:`<div class="crow"><span class="clbl">移動予定</span><span class="cval" style="color:var(--text3)">なし</span></div>`}
     ${isPA?`<div class="crow"><span class="clbl">送信先</span><span class="cval" style="color:var(--accent)">${he(cfg.email)}</span></div>`:''}
@@ -1765,7 +1771,7 @@ function doMailto(){
 // ===== Split send =====
 function doSplitICS(payloads){
   const pZ2=n=>String(n).padStart(2,'0');
-  const freeOrBusy=sa=>sa==='free'?'TRANSPARENT':'OPAQUE';
+  const freeOrBusy=sa=>sa==='free'||sa==='tentative'?'TRANSPARENT':'OPAQUE';
   function makeEv(p){
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(p.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(p.end)}\r\nSUMMARY:${escICS(p.title)}\r\n`;
     if(p.location) ev+=`LOCATION:${escICS(p.location)}\r\n`;
@@ -2362,11 +2368,10 @@ function selShowAs(prefix, val, auto){
   if(prefix==='i'){ showAsI=val; if(!auto) showAsIManual=true; }
   else if(prefix==='att') showAsAtt=val;
   else showAsM=val;
-  ['free','busy','tentative','woe'].forEach((v,i)=>{
-    const key = v==='woe' ? 'workingElsewhere' : v;
+  ['free','busy','tentative','oof','workingElsewhere'].forEach(v=>{
     const el=document.getElementById(prefix+'-sa-'+v);
     if(!el) return;
-    el.className='chip'+(key===val?' cb':'');
+    el.className='chip'+(v===val?' cb':'');
   });
 }
 
@@ -2958,6 +2963,10 @@ function buildSplitPayloads(base){
     });
   });
   return payloads;
+}
+
+function showAsLabel(v){
+  return {'free':'空き時間','tentative':'仮の予定','oof':'外出中','workingElsewhere':'他の場所で作業'}[v]||'予定あり';
 }
 
 function togHelp(btn){

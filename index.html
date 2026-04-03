@@ -1739,7 +1739,7 @@ function buildInspection(){
       const fdObj  = new Date(fd);
       const fedObj = new Date(fd); fedObj.setDate(fedObj.getDate()+1);
       iFurikaeEvents.push({
-        title: '振替休日',
+        title: `振替休日（${fmtJP(fd)}分）`,
         start: fd.replace(/-/g,''),
         end:   `${fedObj.getFullYear()}${pZ2(fedObj.getMonth()+1)}${pZ2(fedObj.getDate())}`,
         memo:  `${date.replace(/-/g,'/')}（${iS.custName} ${iS.inspType}）の振替`,
@@ -2346,16 +2346,18 @@ function buildAttendance(){
     const fed = new Date(furikaeDate); fed.setDate(fed.getDate()+1);
     const pZ  = n=>String(n).padStart(2,'0');
     furikaeEvent = {
-      title:'振替休日',
+      title:`振替休日（${fmtJP(date)}分）`,
       start: furikaeDate.replace(/-/g,''),
       end:   `${fed.getFullYear()}${pZ(fed.getMonth()+1)}${pZ(fed.getDate())}`,
       isAllday: true,
       memo:`${date.replace(/-/g,'/')}（${type}）の振替`,
       category: selCatAtt.name||'振替休日',
-      showAs:'free',
+      showAs:'busy',
     };
   }
-  return{title:type, start:startDT, end:endDT, location:'', category:catLabel,
+  // 振替休日の場合は件名に「いつの振替か」を追加
+  const attTitle = type==='振替休日' ? `振替休日（${fmtJP(date)}分）` : type;
+  return{title:attTitle, start:startDT, end:endDT, location:'', category:catLabel,
          showAs:showAsAtt, units:'', assign:'', work:'', prep:'', memo,
          travelEvents:[], rrule:attRrule, isAllday:allday, furikaeEvent,
          furikaeEvents: furikaeEvent ? [furikaeEvent] : [],
@@ -3091,6 +3093,12 @@ function togOvernight(){
     const edate = document.getElementById('i-edate');
     if(edate) edate.value = '';
   }
+}
+
+function fmtJP(dateStr){
+  if(!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  return `${parseInt(m)}月${parseInt(d)}日`;
 }
 
 function togHelp(btn){

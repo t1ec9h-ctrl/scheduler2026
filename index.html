@@ -1852,7 +1852,7 @@ function doSplitICS(payloads){
     // 振替休日
     const fl=p.furikaeEvents&&p.furikaeEvents.length?p.furikaeEvents:(p.furikaeEvent?[p.furikaeEvent]:[]);
     fl.forEach(fe=>{
-      ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo||'')}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+      ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo||'')}\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
     });
   });
   ics+=`END:VCALENDAR`;
@@ -1902,10 +1902,12 @@ function doICS(){
     // 終日イベント
     const sDate=p.start.replace(/-/g,'');
     const eDate=p.end.replace(/-/g,'');
+    const transp = p.showAs==='free' ? 'TRANSPARENT' : 'OPAQUE';
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${sDate}\r\nDTEND;VALUE=DATE:${eDate}\r\nSUMMARY:${escICS(p.title)}\r\n`;
     if(p.category) ev+=`CATEGORIES:${escICS(p.category)}\r\n`;
-    if(p.memo) ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
-    ev+=`TRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+    if(p.memo)     ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
+    if(p.rrule)    ev+=`RRULE:${p.rrule}\r\n`;
+    ev+=`TRANSP:${transp}\r\nEND:VEVENT\r\n`;
     ics+=ev;
   } else {
     ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'');
@@ -1923,7 +1925,7 @@ function doICS(){
   // 振替休日（複数対応）
   const furikaeList = p.furikaeEvents && p.furikaeEvents.length ? p.furikaeEvents : (p.furikaeEvent ? [p.furikaeEvent] : []);
   furikaeList.forEach(fe=>{
-    ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo)}\r\nTRANSP:TRANSPARENT\r\nEND:VEVENT\r\n`;
+    ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;VALUE=DATE:${fe.start}\r\nDTEND;VALUE=DATE:${fe.end}\r\nSUMMARY:${escICS(fe.title)}\r\nDESCRIPTION:${escICS(fe.memo)}\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
   });
   ics+=`END:VCALENDAR`;
   const bom='\uFEFF'; // BOM付きUTF-8（Outlookの絵文字文字化け対策）

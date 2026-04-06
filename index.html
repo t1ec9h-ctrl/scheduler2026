@@ -2170,7 +2170,9 @@ async function loadJpHolidays(){
 
 async function scanHolidays(){
   const startDate = document.getElementById('i-date').value;
-  const endDate   = document.getElementById('i-edate').value || startDate;
+  // 終了予定日は繰り返し終了日から取得、なければ作業日と同じ
+  const recEndDate = document.getElementById('i-rec-end')?.value;
+  const endDate = recEndDate || startDate;
   if(!startDate){ toast('⚠️ 作業日を入力してください'); return; }
 
   const btn = document.querySelector('#i-furikae-scan button');
@@ -2929,6 +2931,12 @@ function togSplitMode(){
   if(showAsSec) showAsSec.style.display = splitMode ? 'none' : '';
   if(catSec)    catSec.style.display    = splitMode ? 'none' : '';
   if(splitMode){
+    // 初期チップを「自社対応」に見た目もセット
+    [1,2].forEach(slot=>{
+      const chips = document.querySelectorAll(`#i-s${slot}-asgn .chip`);
+      chips.forEach(c=>c.className='chip');
+      if(chips[0]) chips[0].classList.add('cb');
+    });
     resetSplitTravel();
     updateSplitTravelSection();
   } else {
@@ -2996,7 +3004,13 @@ function updateSplitTravelSection(){
 
 function buildSplitPayloads(base){
   const date    = document.getElementById('i-date').value;
-  const endDate = document.getElementById('i-edate').value || date;
+  // 日またぎの場合は翌日を終了日として計算
+  const overnight = document.getElementById('i-overnight')?.checked;
+  let endDate = date;
+  if(overnight && date){
+    const d2 = new Date(date); d2.setDate(d2.getDate()+1);
+    endDate = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
+  }
   const units   = base.units;
   const work    = base.work;
   const memo    = document.getElementById('i-memo').value;

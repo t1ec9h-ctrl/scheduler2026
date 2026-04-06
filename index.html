@@ -862,6 +862,10 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <label class="imp-lbl" for="imp-file">📥 インポート（JSONファイルを選択）</label>
         <input type="file" id="imp-file" accept=".json" style="display:none" onchange="importData(event)">
         <p class="snote">※ データはこのブラウザにのみ保存されます</p>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px;">
+          <button class="bexp" style="background:var(--gdim);border-color:rgba(61,220,132,.3);color:var(--green);" onclick="downloadHTML()">💾 HTMLをダウンロード（オフライン用）</button>
+          <p class="snote">※ マスタデータは含まれません。ダウンロード後に設定タブからインポートしてください</p>
+        </div>
       </div>
     </div>
     <div class="stcard">
@@ -3113,6 +3117,33 @@ function fmtJP(dateStr){
   if(!dateStr) return '';
   const [y,m,d] = dateStr.split('-');
   return `${parseInt(m)}月${parseInt(d)}日`;
+}
+
+// ===== HTMLダウンロード =====
+async function downloadHTML(){
+  toast('⏳ 最新版を取得中...');
+  try {
+    const res = await fetch('https://t1ec9h-ctrl.github.io/scheduler2026/index.html?t='+Date.now());
+    if(!res.ok) throw new Error('fetch failed');
+    const html = await res.text();
+    const b = new Blob([html], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'scheduler2026.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('✅ ダウンロード完了！ファイルをダブルクリックで使えます');
+  } catch(e) {
+    // オフライン時や取得失敗時は現在のページ自体をダウンロード
+    const html = '<!DOCTYPE html>' + document.documentElement.outerHTML;
+    const b = new Blob([html], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b);
+    a.download = 'scheduler2026.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('✅ ダウンロード完了！（現在のページを保存しました）');
+  }
 }
 
 function togHelp(btn){

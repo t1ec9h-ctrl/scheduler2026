@@ -1501,14 +1501,10 @@ function goForm(fid,sub){
     const arp=document.getElementById('att-rec-preview');
     if(arp) arp.style.display='none';
     document.getElementById('att-memo').value='';
-    // 種別を有休にリセット
+    // 種別を有休にリセット（selAttTypeを呼んで表示を正しく更新）
     const chips=document.querySelectorAll('#att-type-chips .chip');
     chips.forEach(c=>c.className='chip');
-    if(chips[0]) chips[0].classList.add('cb');
-    attState.type='有休'; attState.mode='allday';
-    document.getElementById('att-allday').checked=true;
-    document.getElementById('att-time-row').style.display='none';
-    selShowAs('att','free');
+    if(chips[0]){ chips[0].classList.add('cb'); selAttType(chips[0],'有休','allday'); }
     selCatAtt={id:'',name:'',color:''};
     // 振替休日リセット
     const ft=document.getElementById('att-furikae-tog');

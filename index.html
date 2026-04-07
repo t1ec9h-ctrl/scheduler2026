@@ -709,6 +709,14 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
             <input type="date" id="att-end-date" oninput="updateAttPreview()">
           </div>
         </div>
+        <!-- 振替元日付（振替休日選択時） -->
+        <div id="att-furikae-source-field" style="display:none;">
+          <div class="field" style="margin-bottom:0;">
+            <label>何日の振替ですか？<span class="req">*</span></label>
+            <input type="date" id="att-furikae-source" oninput="updateAttPreview()">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">件名：振替休日（〇月〇日分）になります</div>
+          </div>
+        </div>
         <!-- 繰り返し（社内勤務・休日出勤用） -->
         <div id="att-rec-field" style="display:none;">
           <div class="field" style="margin-bottom:0;">
@@ -2138,6 +2146,10 @@ function selAttType(el, type, mode){
   const endField = document.getElementById('att-end-date-field');
   if(endField) endField.style.display = showEndDate ? '' : 'none';
   if(endField && !showEndDate) document.getElementById('att-end-date').value='';
+  // 振替元日付：振替休日のみ表示
+  const furikaeSourceField = document.getElementById('att-furikae-source-field');
+  if(furikaeSourceField) furikaeSourceField.style.display = type==='振替休日' ? '' : 'none';
+  if(type!=='振替休日'){ const fs=document.getElementById('att-furikae-source'); if(fs) fs.value=''; }
   // 繰り返しオプション：社内勤務・休日出勤のみ
   const recField = document.getElementById('att-rec-field');
   if(recField) recField.style.display = ['社内勤務','休日出勤'].includes(type) ? '' : 'none';
@@ -2296,8 +2308,11 @@ function updateAttPreview(){
   const end     = document.getElementById('att-end').value;
   const type    = attState.type;
   const DOW     = ['日','月','火','水','木','金','土'];
+  const furikaeSource = document.getElementById('att-furikae-source')?.value;
 
-  let title = type;
+  let title = type==='振替休日'
+    ? `振替休日（${furikaeSource ? fmtJP(furikaeSource) : '日付を選択'}分）`
+    : type;
   let dateStr = '';
   if(date){
     const d = new Date(date);
@@ -2364,7 +2379,10 @@ function buildAttendance(){
     };
   }
   // 振替休日の場合は件名に「いつの振替か」を追加
-  const attTitle = type==='振替休日' ? `振替休日（${fmtJP(date)}分）` : type;
+  const furikaeSource = document.getElementById('att-furikae-source')?.value;
+  const attTitle = type==='振替休日'
+    ? `振替休日（${furikaeSource ? fmtJP(furikaeSource) : fmtJP(date)}分）`
+    : type;
   return{title:attTitle, start:startDT, end:endDT, location:'', category:catLabel,
          showAs:showAsAtt, units:'', assign:'', work:'', prep:'', memo,
          travelEvents:[], rrule:attRrule, isAllday:allday, furikaeEvent,

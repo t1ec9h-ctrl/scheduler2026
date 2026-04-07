@@ -850,6 +850,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           </div>
           <button class="bmadd" style="width:100%;padding:10px;" onclick="addCategory()">＋ 追加</button>
         </div>
+        <div style="padding:8px 16px 12px;display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);margin-top:4px;">
+          <button class="bmadd" style="flex:1;padding:9px;background:var(--rdim);border-color:rgba(255,77,106,.3);color:var(--red);" onclick="resetCategories()">🔄 デフォルトに戻す</button>
+        </div>
         <div style="padding:0 16px 12px;font-size:11px;color:var(--text3);font-family:var(--mono);">※ Power Automate方式のみ有効。ICS方式では色は反映されません</div>
       </div>
     </div>
@@ -3172,6 +3175,23 @@ function autoSetCategory(prefix, key){
   if(!ref) return;
   ref.id=cat.id; ref.name=cat.name; ref.color=cat.color;
   renderCatChips();
+}
+
+function resetCategories(){
+  if(!confirm('色分類をデフォルト（外出・勤務・会議・在宅・休暇・委託）に戻しますか？\n現在の設定は削除されます。')) return;
+  db.categories=[
+    {id:'cat1',name:'外出',color:'#ff8c00'},
+    {id:'cat2',name:'勤務',color:'#e3008c'},
+    {id:'cat3',name:'会議',color:'#fff100'},
+    {id:'cat4',name:'在宅',color:'#0078d4'},
+    {id:'cat5',name:'休暇',color:'#00b294'},
+    {id:'cat6',name:'委託',color:'#767676'},
+  ];
+  selCatI={id:'',name:'',color:''};
+  selCatM={id:'',name:'',color:''};
+  selCatAtt={id:'',name:'',color:''};
+  save(); renderCatMaster(); renderCatChips();
+  toast('✅ 色分類をデフォルトに戻しました');
 }
 
 function togHelp(btn){

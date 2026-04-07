@@ -444,6 +444,31 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    <!-- 繰り返し（長期点検） -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 繰り返し（長期点検）</div>
+        <div class="tw">
+          <span class="tl" id="i-rec-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-rec-tog" onchange="togRecurrence()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-rec-body">
+        <div class="field">
+          <label>繰り返しパターン</label>
+          <div class="cg" id="i-rec-chips">
+            <div class="chip cb" onclick="selRecPattern(this,'WEEKLY;BYDAY=MO,TU,WE,TH,FR','平日のみ')">平日のみ</div>
+            <div class="chip" onclick="selRecPattern(this,'DAILY','毎日（土日含む）')">毎日</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>繰り返し終了日<span class="req">*</span></label>
+          <input type="date" id="i-rec-end" oninput="updateRecPreview()">
+        </div>
+        <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
+      </div>
+    </div>
+
     <!-- 作業内容 (新規追加) -->
     <div class="sec">
       <div class="sh"><div class="st">作業内容</div></div>
@@ -507,31 +532,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
             </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 繰り返し（長期点検） -->
-    <div class="sec">
-      <div class="sh">
-        <div class="st">🔄 繰り返し（長期点検）</div>
-        <div class="tw">
-          <span class="tl" id="i-rec-lbl">なし</span>
-          <label class="tog"><input type="checkbox" id="i-rec-tog" onchange="togRecurrence()"><div class="tt"></div><div class="tth"></div></label>
-        </div>
-      </div>
-      <div class="sb pb" id="i-rec-body">
-        <div class="field">
-          <label>繰り返しパターン</label>
-          <div class="cg" id="i-rec-chips">
-            <div class="chip cb" onclick="selRecPattern(this,'WEEKLY;BYDAY=MO,TU,WE,TH,FR','平日のみ')">平日のみ</div>
-            <div class="chip" onclick="selRecPattern(this,'DAILY','毎日（土日含む）')">毎日</div>
-          </div>
-        </div>
-        <div class="field">
-          <label>繰り返し終了日<span class="req">*</span></label>
-          <input type="date" id="i-rec-end" oninput="updateRecPreview()">
-        </div>
-        <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
       </div>
     </div>
 

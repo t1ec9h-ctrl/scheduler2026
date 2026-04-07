@@ -1338,15 +1338,12 @@ function init(){
   if(s){try{const d=JSON.parse(s);db=d.db||db;cfg=d.cfg||cfg;}catch(e){}}
   // 旧データとの互換性：存在しないフィールドのみ補完（既存データは上書きしない）
   if(!db.categories || !db.categories.length) db.categories=[
-    {id:'cat1',name:'点検・作業',color:'#3ddc84'},
-    {id:'cat2',name:'トラブル対応',color:'#ff4d6a'},
-    {id:'cat3',name:'会議',color:'#4d9fff'},
-    {id:'cat4',name:'社外打合せ',color:'#ff8c42'},
-    {id:'cat5',name:'移動',color:'#a78bfa'},
-    {id:'cat6',name:'有休',color:'#ffc233'},
-    {id:'cat7',name:'振替休日',color:'#ffc233'},
-    {id:'cat8',name:'休日出勤',color:'#ff8c42'},
-    {id:'cat9',name:'社内勤務',color:'#4d9fff'},
+    {id:'cat1',name:'外出',color:'#ff8c00'},
+    {id:'cat2',name:'勤務',color:'#e3008c'},
+    {id:'cat3',name:'会議',color:'#fff100'},
+    {id:'cat4',name:'在宅',color:'#0078d4'},
+    {id:'cat5',name:'休暇',color:'#00b294'},
+    {id:'cat6',name:'委託',color:'#767676'},
   ];
   if(!db.customers) db.customers=[];
   if(!db.units)     db.units=[];
@@ -1535,12 +1532,13 @@ function showScreen(id){
 function selChip(gid,el,c,val){
   document.querySelectorAll('#'+gid+' .chip').forEach(ch=>{ch.className='chip';});
   el.classList.add(c);
-  if(gid==='mt-chips'){mS.type=val;mS.color=c;document.getElementById('m-att-sec').style.display=val==='個人タスク'?'none':'';}
+  if(gid==='mt-chips'){mS.type=val;mS.color=c;document.getElementById('m-att-sec').style.display=val==='個人タスク'?'none':'';autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');}
   if(gid==='i-insp'){
     iS.inspType=val;iS.inspColor=c;
     const isOther=val==='その他';
     document.getElementById('i-other-field').style.display=isOther?'':'none';
     if(!isOther)document.getElementById('i-other-text').value='';
+    autoSetCategory('i', val);
     updateITitle();
   }
 }
@@ -1555,6 +1553,9 @@ function selAssign(el,c,abbr,val){
   el.classList.add(c);
   iS.assignType=val;iS.assignAbbr=abbr;iS.assignColor=c;
   document.getElementById('i-pf').style.display=val.includes('協力')?'':'none';
+  // 委託のとき色分類を「委託」に自動設定
+  if(abbr==='委') autoSetCategory('i','委');
+  else autoSetCategory('i', iS.inspType||'定期点検');
   // 委託のときは移動時間セクションを非表示
   const travelSec = document.getElementById('i-travel-sec');
   if(travelSec) travelSec.style.display = abbr==='委' ? 'none' : '';
@@ -2144,6 +2145,7 @@ function selAttType(el, type, mode){
     const tog = document.getElementById('att-furikae-tog');
     if(tog){ tog.checked=false; document.getElementById('att-furikae-body').classList.remove('open'); document.getElementById('att-furikae-lbl').textContent='なし'; }
   }
+  autoSetCategory('att', type);
   updateAttPreview();
 }
 
@@ -2859,7 +2861,7 @@ function buildTravel(){
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
-    location:cust, category:'移動', showAs:'workingElsewhere',
+    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:'workingElsewhere',
     units:'', assign:'', work:'', prep:'', memo,
     travelEvents:[], rrule:'', isAllday:false,
     furikaeEvent:null, furikaeEvents:[],
@@ -3141,6 +3143,35 @@ async function downloadHTML(){
     URL.revokeObjectURL(a.href);
     toast('✅ ダウンロード完了！（現在のページを保存しました）');
   }
+}
+
+// ===== 自動色分類 =====
+// 種別→色分類名のマッピング
+const AUTO_CAT_MAP = {
+  // 点検フォーム
+  '定期点検': '外出', '都度点検': '外出', 'トラブル': '外出', 'その他': '外出',
+  // 担当区分
+  '委': '委託',
+  // 会議フォーム
+  '社内会議': '会議', '個人タスク': '会議', 'その他_meeting': '会議',
+  '社外打合せ': '外出',
+  // 勤怠フォーム
+  '有休': '休暇', '午前半休': '休暇', '午後半休': '休暇', '振替休日': '休暇',
+  '社内勤務': '勤務', '休日出勤': '勤務',
+  // 移動フォーム
+  'travel': '外出',
+};
+
+function autoSetCategory(prefix, key){
+  const catName = AUTO_CAT_MAP[key];
+  if(!catName) return;
+  const cat = db.categories.find(c=>c.name===catName);
+  if(!cat) return;
+  // selCatを呼んで自動設定（手動で変更されていない場合のみ）
+  const ref = prefix==='m'?selCatM:prefix==='att'?selCatAtt:prefix==='i'?selCatI:null;
+  if(!ref) return;
+  ref.id=cat.id; ref.name=cat.name; ref.color=cat.color;
+  renderCatChips();
 }
 
 function togHelp(btn){

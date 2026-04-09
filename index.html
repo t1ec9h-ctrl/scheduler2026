@@ -1356,7 +1356,8 @@ function init(){
   if(!db.customers) db.customers=[];
   if(!db.units)     db.units=[];
   if(!db.partners)  db.partners=[];
-  const t=new Date().toISOString().split('T')[0];
+  const _now=new Date(); const _jst=new Date(_now.getTime()+9*3600000);
+  const t=_jst.toISOString().split('T')[0];
   document.getElementById('m-date').value=t;
   document.getElementById('i-date').value=t;
   document.getElementById('cfg-pa').checked=cfg.pa||false;
@@ -1453,7 +1454,7 @@ function navTo(id){
 }
 function goForm(fid,sub){
   if(fid==='travel'){
-    const today=new Date().toISOString().split('T')[0];
+    const _n=new Date(); const today=new Date(_n.getTime()+9*3600000).toISOString().split('T')[0];
     document.getElementById('tv-date').value=today;
     tvState={pattern:'go',custName:'',custId:''};
     document.querySelectorAll('#tv-pattern-chips .chip').forEach((c,i)=>c.className='chip'+(i===0?' cb':''));
@@ -1494,7 +1495,7 @@ function goForm(fid,sub){
     if(ft){ ft.checked=false; document.getElementById('i-furikae-body').classList.remove('open'); document.getElementById('i-furikae-lbl').textContent='なし'; }
   }
   if(fid==='attendance'){
-    const today=new Date().toISOString().split('T')[0];
+    const _n=new Date(); const today=new Date(_n.getTime()+9*3600000).toISOString().split('T')[0];
     document.getElementById('att-date').value=today;
     document.getElementById('att-end-date').value='';
     const aef=document.getElementById('att-end-date-field');

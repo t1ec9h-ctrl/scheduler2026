@@ -1828,10 +1828,31 @@ function triggerSend(formType,action){
 function doConfirm(){if(!pending)return;if(pendingAction==='pa')doMailto();else doICS();closeModal();}
 
 // ===== Power Automate =====
+// PA送信用：+09:00を除去してローカル時刻として送る
+function stripTZ(dt){
+  if(!dt) return dt;
+  return dt.replace(/\+09:00$/,'').replace(/Z$/,'');
+}
+
 function doMailto(){
   const p=pending;
+  // PA用にタイムゾーン情報を除去（PAがタイムゾーン設定で補完する）
+  const pForPA = {...p,
+    start: stripTZ(p.start), end: stripTZ(p.end),
+    prep: stripTZ(p.prep),
+    travelGoStart:     stripTZ(p.travelGoStart),
+    travelGoEnd:       stripTZ(p.travelGoEnd),
+    travelBackStart:   stripTZ(p.travelBackStart),
+    travelBackEnd:     stripTZ(p.travelBackEnd),
+    travelOfficeStart: stripTZ(p.travelOfficeStart),
+    travelOfficeEnd:   stripTZ(p.travelOfficeEnd),
+    travelReturnStart: stripTZ(p.travelReturnStart),
+    travelReturnEnd:   stripTZ(p.travelReturnEnd),
+    travelSiteStart:   stripTZ(p.travelSiteStart),
+    travelSiteEnd:     stripTZ(p.travelSiteEnd),
+  };
   const subject=encodeURIComponent('SCHED: '+p.title);
-  const body=encodeURIComponent(JSON.stringify(p,null,2));
+  const body=encodeURIComponent(JSON.stringify(pForPA,null,2));
   window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
   toast('✅ メールアプリが開きます。送信ボタンを押してください！');
 }
@@ -1875,9 +1896,8 @@ function doSplitICS(payloads){
 }
 
 function doSplitMailto(payloads){
-  // 2件まとめてJSONで送る
   const combined = {split:true, events: payloads.map(p=>({
-    title:p.title, start:p.start, end:p.end,
+    title:p.title, start:stripTZ(p.start), end:stripTZ(p.end),
     location:p.location, category:p.category, showAs:p.showAs, memo:p.memo
   }))};
   const subject = encodeURIComponent('SCHED: ' + payloads.map(p=>p.title).join(' / '));

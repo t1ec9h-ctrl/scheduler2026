@@ -1938,11 +1938,12 @@ function doSplitICS(payloads){
   const pZ2=n=>String(n).padStart(2,'0');
   const freeOrBusy=sa=>sa==='free'||sa==='tentative'?'TRANSPARENT':'OPAQUE';
   function makeEv(p){
+    const cdoStatus = p.showAs==='free'?'FREE':p.showAs==='tentative'?'TENTATIVE':p.showAs==='oof'?'OOF':'BUSY';
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(p.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(p.end)}\r\nSUMMARY:${escICS(p.title)}\r\n`;
     if(p.location) ev+=`LOCATION:${escICS(p.location)}\r\n`;
     if(p.memo)     ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
     if(p.rrule)    ev+=`RRULE:${p.rrule}\r\n`;
-    ev+=`TRANSP:${freeOrBusy(p.showAs)}\r\nEND:VEVENT\r\n`;
+    ev+=`X-MICROSOFT-CDO-BUSYSTATUS:${cdoStatus}\r\nTRANSP:${freeOrBusy(p.showAs)}\r\nEND:VEVENT\r\n`;
     return ev;
   }
   const bom='\uFEFF';
@@ -1953,7 +1954,7 @@ function doSplitICS(payloads){
     // 移動予定
     if(p.travelEvents&&p.travelEvents.length){
       p.travelEvents.forEach(te=>{
-        ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(te.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(te.end)}\r\nSUMMARY:${escICS(te.title)}\r\nDESCRIPTION:${escICS(te.memo||'')}\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
+        ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(te.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(te.end)}\r\nSUMMARY:${escICS(te.title)}\r\nDESCRIPTION:${escICS(te.memo||'')}\r\nX-MICROSOFT-CDO-BUSYSTATUS:OOF\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
       });
     }
     // 振替休日
@@ -1996,11 +1997,12 @@ function stamp(){const n=new Date();return`${n.getFullYear()}${pZ(n.getMonth()+1
 function doICS(){
   const p=pending;
   const pZ2=n=>String(n).padStart(2,'0');
-  const freeOrBusy=sa=>(sa==='free'?'FREE':sa==='tentative'?'TENTATIVE':'BUSY');
+  const freeOrBusy=sa=>(sa==='free'?'FREE':sa==='tentative'?'TENTATIVE':sa==='oof'?'OOF':'BUSY');
   function makeEvent(title, start, end, desc, loc, showAs, rrule){
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(end)}\r\nSUMMARY:${escICS(title)}\r\n`;
     if(loc) ev+=`LOCATION:${escICS(loc)}\r\n`;
     if(desc) ev+=`DESCRIPTION:${escICS(desc)}\r\n`;
+    ev+=`X-MICROSOFT-CDO-BUSYSTATUS:${freeOrBusy(showAs)}\r\n`;
     if(showAs) ev+=`TRANSP:${showAs==='free'||showAs==='tentative'?'TRANSPARENT':'OPAQUE'}\r\n`;
     if(rrule) ev+=`RRULE:${rrule}\r\n`;
     ev+=`BEGIN:VALARM\r\nTRIGGER:-PT30M\r\nACTION:DISPLAY\r\nDESCRIPTION:${escICS(title)}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;

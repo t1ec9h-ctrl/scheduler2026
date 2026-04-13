@@ -177,15 +177,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 .imp-lbl{display:block;background:var(--card2);border:1px dashed var(--border2);border-radius:10px;padding:12px;font-size:13px;color:var(--text3);text-align:center;cursor:pointer;}
 
 /* Help */
-.acc-sec{background:var(--card2);border:1px dashed var(--border2);border-radius:12px;margin-bottom:8px;overflow:hidden;}
-.acc-head{width:100%;background:none;border:none;text-align:left;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;}
-.acc-head:active{background:var(--adim);}
-.acc-icon{font-size:13px;width:20px;text-align:center;flex-shrink:0;opacity:.7;}
-.acc-title{flex:1;font-size:12px;font-weight:600;color:var(--text3);}
-.acc-badge{font-size:11px;color:var(--accent);font-family:var(--mono);}
-.acc-arr{font-size:14px;color:var(--text3);transition:transform .2s;}
-.acc-body{display:none;border-top:1px dashed var(--border2);background:var(--card);}
-.acc-body.open{display:block;}
 .hcard{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;}
 .hacc{width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;text-align:left;}
 .hacc:active{background:var(--card2);}
@@ -279,32 +270,12 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📝</span>
-        <span class="acc-title">議題・内容</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
-      </div>
-    </div>    <div class="sec">
+    <div class="sec">
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
     </div>
 
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📋</span>
-        <span class="acc-title">事前準備</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
-      </div>
-    </div>    <div class="sec">
+    <div class="sec">
       <div class="sh">
         <div class="st">事前準備</div>
         <div class="tw"><span class="tl" id="m-pl">なし</span><label class="tog"><input type="checkbox" id="m-pt" onchange="togPrep('m')"><div class="tt"></div><div class="tth"></div></label></div>
@@ -322,17 +293,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <!-- 表示方法 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
-      </div>
-    </div>    <div class="sec">
+    <div class="sec">
       <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="m-showas-chips">
@@ -345,17 +306,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <!-- 色分類 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🎨</span>
-        <span class="acc-title">色分類</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
-      </div>
-    </div>    <div class="sec">
+    <div class="sec">
       <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb">
         <div class="field" style="margin-bottom:0;">
@@ -368,18 +319,10 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="submit-area" id="m-submit-area"></div>
   </div>
 
-
-
   <!-- INSPECTION FORM -->
   <div class="screen fp" id="screen-inspection">
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">現場・号機</div></div>
       <div class="sb">
         <div class="field">
           <label>お客さま<span class="req">*</span></label>
@@ -391,17 +334,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
         <div class="field"><label>号機（複数選択可）<span class="req">*</span></label><div class="ug" id="i-ug"><span style="font-size:12px;color:var(--text3)">お客さまを選択してください</span></div></div>
       </div>
-    
-      </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🎨</span>
-        <span class="acc-title">色分類</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">点検種別・担当</div></div>
       <div class="sb">
         <div class="field">
           <label>点検種別<span class="req">*</span></label>
@@ -429,17 +364,15 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <select id="i-partner" onchange="updateITitle()"><option value="">— 選択 —</option></select>
         </div>
       </div>
-    
-      </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh">
+        <div class="st">日時</div>
+        <div class="tw">
+          <span class="tl" id="i-split-lbl" style="font-size:10px;">分割登録</span>
+          <label class="tog"><input type="checkbox" id="i-split-tog" onchange="togSplitMode()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
       <div class="sb">
         <div class="fr">
           <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
@@ -509,32 +442,36 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           </div>
         </div>
       </div>
-    
-      </div>
     </div>
 
     <!-- 繰り返し（長期点検） -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🔄</span>
-        <span class="acc-title">繰り返し（長期点検）</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 繰り返し（長期点検）</div>
+        <div class="tw">
+          <span class="tl" id="i-rec-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-rec-tog" onchange="togRecurrence()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-rec-body">
+        <div class="field">
+          <label>繰り返しパターン</label>
+          <div class="cg" id="i-rec-chips">
+            <div class="chip cb" onclick="selRecPattern(this,'WEEKLY;BYDAY=MO,TU,WE,TH,FR','平日のみ')">平日のみ</div>
+            <div class="chip" onclick="selRecPattern(this,'DAILY','毎日（土日含む）')">毎日</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>繰り返し終了日<span class="req">*</span></label>
+          <input type="date" id="i-rec-end" oninput="updateRecPreview()">
+        </div>
+        <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
       </div>
     </div>
 
     <!-- 作業内容 (新規追加) -->
-    <div class="acc-sec" id="i-travel-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🚗</span>
-        <span class="acc-title">移動予定</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">作業内容</div></div>
       <div class="sb">
         <div class="field">
           <label>作業内容<span style="font-size:10px;color:var(--text3);margin-left:6px;font-family:var(--mono)">件名に反映されます</span></label>
@@ -543,8 +480,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <!-- 件名プレビュー -->
         <div class="title-preview-label">件名プレビュー</div>
         <div class="title-preview" id="i-title-preview">入力すると自動生成されます</div>
-      </div>
-    
       </div>
     </div>
 
@@ -627,39 +562,52 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📋</span>
-        <span class="acc-title">事前準備</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
+    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="i-pl">なし</span><label class="tog"><input type="checkbox" id="i-pt" onchange="togPrep('i')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="i-pb">
+        <div class="lrows" id="i-todo-rows"><div class="lr"><input type="text" placeholder="例：安全帳票を作成する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('i-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="i-pd" value="3" min="1" max="30" oninput="calcR('i')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="i-ptime" value="09:00" oninput="calcR('i')"></div>
+          </div>
+          <div class="rbox" id="i-rbox">📅 作業日を入力すると計算します</div>
+        </div>
       </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📝</span>
-        <span class="acc-title">メモ・備考</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">メモ・備考</div></div>
       <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..."></textarea></div>
-    
-      </div>
     </div>
     <!-- 振替休日 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🔄</span>
-        <span class="acc-title">振替休日</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 振替休日</div>
+        <div class="tw">
+          <span class="tl" id="i-furikae-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-furikae-tog" onchange="togInspFurikae()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-furikae-body">
+        <!-- 作業期間内の土日祝カウント -->
+        <div id="i-furikae-scan" style="margin-bottom:12px;">
+          <button class="badd" onclick="scanHolidays()" style="border-style:solid;border-color:var(--accent);color:var(--accent);">
+            🔍 作業期間内の土日祝を検索
+          </button>
+          <div id="i-holiday-list" style="margin-top:10px;"></div>
+        </div>
+        <!-- 追加済み振替休日リスト -->
+        <div id="i-furikae-added" style="margin-bottom:8px;"></div>
+        <!-- 手動追加 -->
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+          <input type="date" id="i-furikae-date" style="flex:1;">
+          <button class="bmadd" onclick="addFurikaeDate(document.getElementById('i-furikae-date').value)">＋ 追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;">追加した日に振替休日の予定が登録されます（終日・空き時間）</div>
       </div>
     </div>
 

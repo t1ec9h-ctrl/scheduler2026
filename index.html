@@ -1275,12 +1275,11 @@ function updateITitle(){
 }
 
 function updateMTitle(){
-  // 会議は件名をそのまま使うだけなのでプレビューなし
   const prev=document.getElementById('m-title-preview');
   if(prev){
     const t=document.getElementById('m-title')?.value.trim();
     const type=mS.type||'社内会議';
-    prev.textContent = t ? `[${type}] ${t}` : '種別と件名を入力してください';
+    prev.textContent = t ? `[${type}] ${t}` : `[${type}] 件名を入力してください`;
   }
 }
 

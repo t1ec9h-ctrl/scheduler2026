@@ -1834,22 +1834,96 @@ function stripTZ(dt){
   return dt.replace(/\+09:00$/,'').replace(/Z$/,'');
 }
 
+// RRULEを展開して繰り返し分の日付リストを生成
+function expandRrule(startDT, endDT, rrule){
+  if(!rrule) return [{start:startDT, end:endDT}];
+  const events = [];
+  // FREQ, BYDAY, UNTIL を解析
+  const freqMatch  = rrule.match(/FREQ=([^;]+)/);
+  const untilMatch = rrule.match(/UNTIL=([^;T]+)/);
+  const bydayMatch = rrule.match(/BYDAY=([^;]+)/);
+  if(!freqMatch || !untilMatch) return [{start:startDT, end:endDT}];
+
+  const until  = new Date(untilMatch[1].replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3')+'T23:59:59');
+  const bydays = bydayMatch ? bydayMatch[1].split(',') : null;
+  const dayMap = {SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+
+  // 開始・終了の時刻部分を取得
+  const sTime = startDT.includes('T') ? startDT.split('T')[1] : '';
+  const eTime = endDT.includes('T')   ? endDT.split('T')[1]   : '';
+  const durMs  = new Date(endDT) - new Date(startDT);
+
+  let cur = new Date(startDT);
+  let count = 0;
+  while(cur <= until && count < 60){ // 最大60件
+    const dow = cur.getDay();
+    const inByday = !bydays || bydays.some(d=>dayMap[d]===dow);
+    if(inByday){
+      const dateStr = cur.toISOString().split('T')[0];
+      const sEnd = new Date(cur.getTime() + durMs);
+      const eDateStr = sEnd.toISOString().split('T')[0];
+      events.push({
+        start: sTime ? `${dateStr}T${sTime}` : dateStr,
+        end:   eTime ? `${eDateStr}T${eTime}` : eDateStr,
+      });
+    }
+    cur.setDate(cur.getDate()+1);
+    count++;
+  }
+  return events.length ? events : [{start:startDT, end:endDT}];
+}
+
 function doMailto(){
   const p=pending;
-  // PA用にタイムゾーン情報を除去（PAがタイムゾーン設定で補完する）
+  const stripTZlocal = dt => stripTZ(dt);
+
+  // 繰り返しがある場合は展開してevents配列で送る
+  if(p.rrule){
+    const occurrences = expandRrule(p.start, p.end, p.rrule);
+    const events = occurrences.map((occ,i)=>({
+      ...p,
+      start: stripTZlocal(occ.start),
+      end:   stripTZlocal(occ.end),
+      rrule: '', // 展開済みなのでrruleは不要
+      // 移動予定は初日のみ
+      travelGoStart:     i===0 ? stripTZ(p.travelGoStart)     : '',
+      travelGoEnd:       i===0 ? stripTZ(p.travelGoEnd)       : '',
+      travelGoMemo:      i===0 ? p.travelGoMemo               : '',
+      travelBackStart:   i===occurrences.length-1 ? stripTZ(p.travelBackStart)   : '',
+      travelBackEnd:     i===occurrences.length-1 ? stripTZ(p.travelBackEnd)     : '',
+      travelBackMemo:    i===occurrences.length-1 ? p.travelBackMemo             : '',
+      travelOfficeStart: i===0 ? stripTZ(p.travelOfficeStart) : '',
+      travelOfficeEnd:   i===0 ? stripTZ(p.travelOfficeEnd)   : '',
+      travelReturnStart: i===occurrences.length-1 ? stripTZ(p.travelReturnStart) : '',
+      travelReturnEnd:   i===occurrences.length-1 ? stripTZ(p.travelReturnEnd)   : '',
+      travelSiteStart:   stripTZ(p.travelSiteStart),
+      travelSiteEnd:     stripTZ(p.travelSiteEnd),
+      prep: i===0 ? stripTZ(p.prep) : '', // 事前準備は初日のみ
+    }));
+    const subject = encodeURIComponent('SCHED: '+p.title);
+    const body    = encodeURIComponent(JSON.stringify({split:false, events}, null, 2));
+    window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
+    toast(`✅ ${occurrences.length}件分をメール送信します`);
+    return;
+  }
+
+  // 通常（繰り返しなし）
   const pForPA = {...p,
     start: stripTZ(p.start), end: stripTZ(p.end),
     prep: stripTZ(p.prep),
     travelGoStart:     stripTZ(p.travelGoStart),
     travelGoEnd:       stripTZ(p.travelGoEnd),
+    travelGoMemo:      p.travelGoMemo,
     travelBackStart:   stripTZ(p.travelBackStart),
     travelBackEnd:     stripTZ(p.travelBackEnd),
+    travelBackMemo:    p.travelBackMemo,
     travelOfficeStart: stripTZ(p.travelOfficeStart),
     travelOfficeEnd:   stripTZ(p.travelOfficeEnd),
     travelReturnStart: stripTZ(p.travelReturnStart),
     travelReturnEnd:   stripTZ(p.travelReturnEnd),
     travelSiteStart:   stripTZ(p.travelSiteStart),
     travelSiteEnd:     stripTZ(p.travelSiteEnd),
+    rrule: '',
   };
   const subject=encodeURIComponent('SCHED: '+p.title);
   const body=encodeURIComponent(JSON.stringify(pForPA,null,2));

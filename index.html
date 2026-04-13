@@ -1907,10 +1907,12 @@ function doMailto(){
     return;
   }
 
-  // 通常（繰り返しなし）
-  const pForPA = {...p,
+  // 通常（繰り返しなし）→ 1件の配列として送る
+  const singleEvent = {
+    title: p.title,
     start: stripTZ(p.start), end: stripTZ(p.end),
-    prep: stripTZ(p.prep),
+    location: p.location, category: p.category,
+    showAs: p.showAs, memo: p.memo, prep: stripTZ(p.prep),
     travelGoStart:     stripTZ(p.travelGoStart),
     travelGoEnd:       stripTZ(p.travelGoEnd),
     travelGoMemo:      p.travelGoMemo,
@@ -1921,12 +1923,12 @@ function doMailto(){
     travelOfficeEnd:   stripTZ(p.travelOfficeEnd),
     travelReturnStart: stripTZ(p.travelReturnStart),
     travelReturnEnd:   stripTZ(p.travelReturnEnd),
+    travelSiteTitle:   p.travelSiteTitle,
     travelSiteStart:   stripTZ(p.travelSiteStart),
     travelSiteEnd:     stripTZ(p.travelSiteEnd),
-    rrule: '',
   };
   const subject=encodeURIComponent('SCHED: '+p.title);
-  const body=encodeURIComponent(JSON.stringify(pForPA,null,2));
+  const body=encodeURIComponent(JSON.stringify({events:[singleEvent]},null,2));
   window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
   toast('✅ メールアプリが開きます。送信ボタンを押してください！');
 }
@@ -1970,14 +1972,19 @@ function doSplitICS(payloads){
 }
 
 function doSplitMailto(payloads){
-  const combined = {split:true, events: payloads.map(p=>({
+  const events = payloads.map(p=>({
     title:p.title, start:stripTZ(p.start), end:stripTZ(p.end),
-    location:p.location, category:p.category, showAs:p.showAs, memo:p.memo
-  }))};
+    location:p.location, category:p.category, showAs:p.showAs, memo:p.memo,
+    prep:'', travelGoStart:'', travelGoEnd:'', travelGoMemo:'',
+    travelBackStart:'', travelBackEnd:'', travelBackMemo:'',
+    travelOfficeStart:'', travelOfficeEnd:'',
+    travelReturnStart:'', travelReturnEnd:'',
+    travelSiteTitle:'', travelSiteStart:'', travelSiteEnd:'',
+  }));
   const subject = encodeURIComponent('SCHED: ' + payloads.map(p=>p.title).join(' / '));
-  const body    = encodeURIComponent(JSON.stringify(combined,null,2));
+  const body    = encodeURIComponent(JSON.stringify({events},null,2));
   window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
-  toast('✅ メールアプリが開きます。送信ボタンを押してください！');
+  toast(`✅ ${events.length}件分をメール送信します`);
 }
 
 // ===== ICS =====

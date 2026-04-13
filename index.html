@@ -68,8 +68,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* Form */
 .fp{padding:16px;}
 .sec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
-.sec.opt{background:var(--card2);border-color:var(--border2);}
-.sec.opt .st{color:var(--text3);font-size:12px;font-weight:500;}
+.opt-divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;padding:0 4px;}
+.opt-divider span{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;}
+.opt-divider::before,.opt-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
 .sh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .st{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;font-family:var(--mono);}
 .sb{padding:14px 16px;}
@@ -247,7 +249,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 
   <!-- MEETING FORM -->
   <div class="screen fp" id="screen-meeting">
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">種別</div></div>
       <div class="sb">
         <div class="cg" id="mt-chips">
@@ -258,7 +260,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">基本情報</div></div>
       <div class="sb">
         <div class="field"><label>件名<span class="req">*</span></label><input type="text" id="m-title" placeholder="例：週次チームMTG" oninput="updateMTitle()"></div>
@@ -272,12 +274,14 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="sec opt">
+
+    <div class="opt-divider"><span>オプション</span></div>
+    <div class="sec">
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
     </div>
 
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh">
         <div class="st">事前準備</div>
         <div class="tw"><span class="tl" id="m-pl">なし</span><label class="tog"><input type="checkbox" id="m-pt" onchange="togPrep('m')"><div class="tt"></div><div class="tth"></div></label></div>
@@ -295,7 +299,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <!-- 表示方法 -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="m-showas-chips">
@@ -308,7 +312,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <!-- 色分類 -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb">
         <div class="field" style="margin-bottom:0;">
@@ -447,7 +451,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 繰り返し（長期点検） -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh">
         <div class="st">🔄 繰り返し（長期点検）</div>
         <div class="tw">
@@ -472,7 +476,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 作業内容 (新規追加) -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">作業内容</div></div>
       <div class="sb">
         <div class="field">
@@ -485,6 +489,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+
+    <div class="opt-divider"><span>オプション</span></div>
     <!-- 移動時間 -->
     <div class="sec" id="i-travel-sec">
       <div class="sh">
@@ -581,12 +587,12 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">メモ・備考</div></div>
       <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..."></textarea></div>
     </div>
     <!-- 振替休日 -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh">
         <div class="st">🔄 振替休日</div>
         <div class="tw">
@@ -776,8 +782,10 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+
+    <div class="opt-divider"><span>オプション</span></div>
     <!-- 表示方法 -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="att-showas-chips">
@@ -791,7 +799,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 色分類 -->
-    <div class="sec opt">
+    <div class="sec">
       <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cat-chips" id="att-cat-chips">

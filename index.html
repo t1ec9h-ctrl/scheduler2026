@@ -475,7 +475,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="field">
           <label>作業内容<span style="font-size:10px;color:var(--text3);margin-left:6px;font-family:var(--mono)">件名に反映されます</span></label>
-          <input type="text" id="i-work" placeholder="例：２４０００時間E点検" oninput="updateITitle()">
+          <input type="text" id="i-work" placeholder="例：定期点検、水処理設備整備" oninput="updateITitle()">
         </div>
         <!-- 件名プレビュー -->
         <div class="title-preview-label">件名プレビュー</div>
@@ -507,7 +507,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           </div>
           <div class="field" style="margin-bottom:0;">
             <label>現場移動（任意）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">前の現場名を入力</span></label>
-            <input type="text" id="i-tr-from-site" placeholder="例：神戸電機㈱（空欄でスキップ）">
+            <input type="text" id="i-tr-from-site" placeholder="例：前の現場名（空欄でスキップ）">
           </div>
         </div>
         <!-- 分割モード用 -->
@@ -646,7 +646,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <!-- 現場移動のとき：移動元も入力 -->
         <div class="field" id="tv-from-field" style="display:none;margin-bottom:0;">
           <label>移動元の現場名</label>
-          <input type="text" id="tv-from-site" placeholder="例：神戸電機㈱">
+          <input type="text" id="tv-from-site" placeholder="例：前の現場名">
         </div>
       </div>
     </div>
@@ -1028,17 +1028,17 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="field">
       <label>号機を一括追加（連番）</label>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <input type="text" id="bulk-prefix" placeholder="機種名（例：ガスエンジン）" style="flex:1;min-width:130px;" oninput="updateBulkPreview1()">
+        <input type="text" id="bulk-prefix" placeholder="機種名（例：発電機）" style="flex:1;min-width:130px;" oninput="updateBulkPreview1()">
         <input type="number" id="bulk-from" placeholder="開始" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview1()">
         <span style="color:var(--text3);font-size:13px;flex-shrink:0;">〜</span>
         <input type="number" id="bulk-to" placeholder="終了" min="1" max="99" style="width:66px;text-align:center;" oninput="updateBulkPreview1()">
         <span style="color:var(--text2);font-size:12px;flex-shrink:0;">号機</span>
       </div>
-      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">例：ガスエンジン・1〜3 → ガスエンジン１号機〜３号機</div>
+      <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">例：発電機・1〜3 → 発電機１号機〜３号機</div>
     </div>
     <div class="field">
       <label>個別に追加（カンマ区切り）</label>
-      <input type="text" id="manual-units" placeholder="例：ジェネリンク, ボイラ１号機" oninput="updateBulkPreview1()">
+      <input type="text" id="manual-units" placeholder="例：１号機, ２号機" oninput="updateBulkPreview1()">
     </div>
     <div id="bulk-preview" style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent);font-family:var(--mono);margin-top:4px;min-height:36px;line-height:1.7;white-space:pre-wrap;"></div>
     <div class="mac">
@@ -1066,7 +1066,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
     <div class="field">
       <label>個別に追加（カンマ区切り）</label>
-      <input type="text" id="au-manual" placeholder="例：予備機, ジェネリンク" oninput="updateBulkPreview2()">
+      <input type="text" id="au-manual" placeholder="例：予備機, ３号機" oninput="updateBulkPreview2()">
     </div>
     <div id="bulk-preview2" style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--accent);font-family:var(--mono);margin-top:4px;min-height:36px;line-height:1.7;white-space:pre-wrap;"></div>
     <div class="mac">
@@ -1101,11 +1101,11 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="mtitle">＋ 新規物件を登録</div>
     <div class="field">
       <label>物件名<span class="req">*</span></label>
-      <input type="text" id="qc-name" placeholder="例：イオンモール茨木">
+      <input type="text" id="qc-name" placeholder="例：○○株式会社">
     </div>
     <div class="field">
       <label>号機名（カンマ区切りで複数可）</label>
-      <input type="text" id="qc-units" placeholder="例：ガスエンジン１号機, ２号機">
+      <input type="text" id="qc-units" placeholder="例：１号機, ２号機">
       <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">空欄でも登録できます（後でマスタから追加可）</div>
     </div>
     <div class="mac">

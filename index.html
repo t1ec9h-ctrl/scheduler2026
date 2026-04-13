@@ -184,15 +184,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 .htitle{flex:1;font-size:13px;font-weight:700;color:var(--text);}
 .harr{font-size:18px;color:var(--text3);transition:transform .2s;}
 .hacc.open .harr{transform:rotate(90deg);}
-.acc-sec{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;}
-.acc-head{width:100%;background:var(--card);border:none;text-align:left;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;}
-.acc-head:active{background:var(--card2);}
-.acc-icon{font-size:15px;width:22px;text-align:center;flex-shrink:0;}
-.acc-title{flex:1;font-size:13px;font-weight:600;color:var(--text2);}
-.acc-badge{font-size:11px;color:var(--accent);font-family:var(--mono);}
-.acc-arr{font-size:16px;color:var(--text3);transition:transform .2s;}
-.acc-body{display:none;border-top:1px solid var(--border);}
-.acc-body.open{display:block;}
 .hbody{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
 .hbody.open{display:block;}
 .hq{font-size:12px;font-weight:700;color:var(--accent);margin-top:14px;margin-bottom:4px;}
@@ -279,16 +270,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📝</span>
-        <span class="acc-title">議題・内容</span>
-        <span class="acc-badge" id="m-agenda-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-        <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定" oninput="updateMAgendaBadge()"></textarea></div>
-      </div>
+    <div class="sec">
+      <div class="sh"><div class="st">議題・内容</div></div>
+      <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
     </div>
 
     <div class="sec">
@@ -309,14 +293,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <!-- 表示方法 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge" id="m-showas-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="m-showas-chips">
           <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
@@ -340,8 +318,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
     <div class="submit-area" id="m-submit-area"></div>
   </div>
-
-
 
   <!-- INSPECTION FORM -->
   <div class="screen fp" id="screen-inspection">
@@ -508,15 +484,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 移動時間 -->
-    <div class="acc-sec" id="i-travel-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🚗</span>
-        <span class="acc-title">移動予定</span>
-        <span class="acc-badge" id="i-travel-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-      <div class="sh" style="display:none;">
+    <div class="sec" id="i-travel-sec">
+      <div class="sh">
         <div class="st">🚗 移動予定</div>
         <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">空き時間で自動追加</div>
       </div>
@@ -564,18 +533,14 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           </div>
         </div>
       </div>
-      </div>
     </div>
 
     <!-- 表示方法 -->
-    <div class="acc-sec" id="i-showas-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge" id="i-showas-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec" id="i-showas-sec">
+      <div class="sh">
+        <div class="st">📅 Outlook 表示方法</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">担当区分で自動設定</div>
+      </div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="i-showas-chips">
           <div class="chip" id="i-sa-free" onclick="selShowAs('i','free')">🔲 空き時間</div>
@@ -585,37 +550,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="i-sa-workingElsewhere" onclick="selShowAs('i','workingElsewhere')">他の場所で作業</div>
         </div>
       </div>
-      </div>
     </div>
 
     <!-- 色分類 -->
-    <div class="acc-sec" id="i-cat-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🎨</span>
-        <span class="acc-title">色分類</span>
-        <span class="acc-badge" id="i-cat-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-      <div class="sh" style="display:none;"><div class="st">🎨 Outlook 色分類</div></div>
+    <div class="sec" id="i-cat-sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cat-chips" id="i-cat-chips">
           <div class="cat-chip cat-none active" onclick="selCat(this,'','','i')">なし</div>
         </div>
       </div>
-      </div>
     </div>
 
-    <!-- 事前準備 -->
-    <div class="acc-sec" id="i-prep-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📋</span>
-        <span class="acc-title">事前準備</span>
-        <span class="acc-badge" id="i-prep-acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-      <div class="sh" style="display:none;">
+    <div class="sec">
+      <div class="sh">
         <div class="st">事前準備</div>
         <div class="tw"><span class="tl" id="i-pl">なし</span><label class="tog"><input type="checkbox" id="i-pt" onchange="togPrep('i')"><div class="tt"></div><div class="tth"></div></label></div>
       </div>
@@ -630,30 +578,14 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="rbox" id="i-rbox">📅 作業日を入力すると計算します</div>
         </div>
       </div>
-      </div>
     </div>
-    <!-- メモ -->
-    <div class="acc-sec" id="i-memo-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📝</span>
-        <span class="acc-title">メモ・備考</span>
-        <span class="acc-badge" id="i-memo-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-      <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..." oninput="updateIMemoBadge()"></textarea></div>
-      </div>
+    <div class="sec">
+      <div class="sh"><div class="st">メモ・備考</div></div>
+      <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..."></textarea></div>
     </div>
     <!-- 振替休日 -->
-    <div class="acc-sec" id="i-furikae-acc">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🔄</span>
-        <span class="acc-title">振替休日</span>
-        <span class="acc-badge" id="i-furikae-acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-      <div class="sh" style="display:none;">
+    <div class="sec">
+      <div class="sh">
         <div class="st">🔄 振替休日</div>
         <div class="tw">
           <span class="tl" id="i-furikae-lbl">なし</span>
@@ -676,7 +608,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <button class="bmadd" onclick="addFurikaeDate(document.getElementById('i-furikae-date').value)">＋ 追加</button>
         </div>
         <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;">追加した日に振替休日の予定が登録されます（終日・空き時間）</div>
-      </div>
       </div>
     </div>
 
@@ -844,39 +775,25 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 表示方法 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">📅</span>
-        <span class="acc-title">表示方法</span>
-        <span class="acc-badge" id="att-showas-badge">予定あり</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-        <div class="sb" style="padding:12px 16px;">
-          <div class="cg" id="att-showas-chips">
-            <div class="chip" id="att-sa-free"      onclick="selShowAs('att','free')">🔲 空き時間</div>
-            <div class="chip cb" id="att-sa-busy"   onclick="selShowAs('att','busy')">🔳 予定あり</div>
-            <div class="chip" id="att-sa-tentative" onclick="selShowAs('att','tentative')">❓ 仮の予定</div>
-            <div class="chip" id="att-sa-oof" onclick="selShowAs('att','oof')">外出中</div>
-            <div class="chip" id="att-sa-workingElsewhere" onclick="selShowAs('att','workingElsewhere')">他の場所で作業</div>
-          </div>
+    <div class="sec">
+      <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="att-showas-chips">
+          <div class="chip" id="att-sa-free"      onclick="selShowAs('att','free')">🔲 空き時間</div>
+          <div class="chip cb" id="att-sa-busy"   onclick="selShowAs('att','busy')">🔳 予定あり</div>
+          <div class="chip" id="att-sa-tentative" onclick="selShowAs('att','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="att-sa-oof" onclick="selShowAs('att','oof')">外出中</div>
+          <div class="chip" id="att-sa-workingElsewhere" onclick="selShowAs('att','workingElsewhere')">他の場所で作業</div>
         </div>
       </div>
     </div>
 
     <!-- 色分類 -->
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🎨</span>
-        <span class="acc-title">色分類</span>
-        <span class="acc-badge" id="att-cat-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
-        <div class="sb" style="padding:12px 16px;">
-          <div class="cat-chips" id="att-cat-chips">
-            <div class="cat-chip cat-none active" onclick="selCat(this,'','','att')">なし</div>
-          </div>
+    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cat-chips" id="att-cat-chips">
+          <div class="cat-chip cat-none active" onclick="selCat(this,'','','att')">なし</div>
         </div>
       </div>
     </div>

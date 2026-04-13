@@ -321,6 +321,15 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
+    <!-- 件名プレビュー -->
+    <div class="sec">
+      <div class="sh"><div class="st">登録内容</div></div>
+      <div class="sb">
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="m-title-preview">種別と件名を入力してください</div>
+      </div>
+    </div>
+
     <div class="submit-area" id="m-submit-area"></div>
   </div>
 
@@ -493,7 +502,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="sec" id="i-travel-sec">
       <div class="sh">
         <div class="st">🚗 移動予定</div>
-        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">空き時間で自動追加</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">外出中で自動追加</div>
       </div>
       <div class="sb">
         <div class="field">
@@ -1006,7 +1015,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </button>
     <div class="hbody">
       <div class="hq">Q. 入力したお客さまや号機のデータはどこに保存される？</div>
-      <div class="ha">このブラウザのローカルストレージにのみ保存されます。サーバーには一切送信されません。GitHubにアップロードされるのはHTMLファイルの中身だけで、個人情報は含まれていません。</div>
+      <div class="ha">このブラウザのローカルストレージにのみ保存されます。サーバーには一切送信されません。GitHubにアップロードされるのはHTMLファイルの中身だけで、個人情報は含まれていません。<br><br>
+        <strong>PCで確認する方法（Chrome/Edge）：</strong><br>
+        F12 → 「Application」タブ → 左メニュー「Local Storage」→ サイトのURL → <code>sched_v5</code> キーにデータが入っています。</div>
       <div class="hq">Q. 別の端末に引き継ぎたい</div>
       <div class="ha">設定タブ→「📤 マスタをエクスポート」でJSONファイルを保存し、新しい端末で「📥 インポート」してください。</div>
       <div class="hq">Q. ブラウザのキャッシュを消したらデータは消える？</div>
@@ -1265,6 +1276,12 @@ function updateITitle(){
 
 function updateMTitle(){
   // 会議は件名をそのまま使うだけなのでプレビューなし
+  const prev=document.getElementById('m-title-preview');
+  if(prev){
+    const t=document.getElementById('m-title')?.value.trim();
+    const type=mS.type||'社内会議';
+    prev.textContent = t ? `[${type}] ${t}` : '種別と件名を入力してください';
+  }
 }
 
 // ===== Submit buttons =====

@@ -1410,7 +1410,7 @@ function showScreen(id){
 function selChip(gid,el,c,val){
   document.querySelectorAll('#'+gid+' .chip').forEach(ch=>{ch.className='chip';});
   el.classList.add(c);
-  if(gid==='mt-chips'){mS.type=val;mS.color=c;document.getElementById('m-att-sec').style.display=val==='個人タスク'?'none':'';autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');}
+  if(gid==='mt-chips'){mS.type=val;mS.color=c;document.getElementById('m-att-sec').style.display=val==='個人タスク'?'none':'';autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');updateMTitle();}
   if(gid==='i-insp'){
     iS.inspType=val;iS.inspColor=c;
     const isOther=val==='その他';

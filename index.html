@@ -290,6 +290,61 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定" oninput="updateMAgendaBadge()"></textarea></div>
       </div>
     </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="m-pl">なし</span><label class="tog"><input type="checkbox" id="m-pt" onchange="togPrep('m')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="m-pb">
+        <div class="lrows" id="m-todo-rows"><div class="lr"><input type="text" placeholder="例：資料を事前共有する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('m-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="m-pd" value="1" min="1" max="30" oninput="calcR('m')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="m-ptime" value="09:00" oninput="calcR('m')"></div>
+          </div>
+          <div class="rbox" id="m-rbox">📅 日付を入力すると計算します</div>
+        </div>
+      </div>
+    </div>
+    <!-- 表示方法 -->
+    <div class="acc-sec">
+      <button class="acc-head" onclick="togAcc(this)">
+        <span class="acc-icon">📅</span>
+        <span class="acc-title">表示方法</span>
+        <span class="acc-badge" id="m-showas-badge">予定あり</span>
+        <span class="acc-arr">›</span>
+      </button>
+      <div class="acc-body">
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="m-showas-chips">
+          <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
+          <div class="chip cb" id="m-sa-busy" onclick="selShowAs('m','busy')">🔳 予定あり</div>
+          <div class="chip" id="m-sa-tentative" onclick="selShowAs('m','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="m-sa-oof" onclick="selShowAs('m','oof')">外出中</div>
+          <div class="chip" id="m-sa-workingElsewhere" onclick="selShowAs('m','workingElsewhere')">他の場所で作業</div>
+        </div>
+      </div>
+    </div>
+    <!-- 色分類 -->
+    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb">
+        <div class="field" style="margin-bottom:0;">
+          <div class="cat-chips" id="m-cat-chips">
+            <div class="cat-chip cat-none active" onclick="selCat(this,'','','m')">なし</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="submit-area" id="m-submit-area"></div>
+  </div>
+
+
+
+  <!-- INSPECTION FORM -->
+  <div class="screen fp" id="screen-inspection">
     <div class="sec">
       <div class="sh"><div class="st">点検種別・担当</div></div>
       <div class="sb">
@@ -612,6 +667,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <div class="submit-area" id="i-submit-area"></div>
+  </div>
+
   </div>
 
   <!-- TRAVEL FORM -->

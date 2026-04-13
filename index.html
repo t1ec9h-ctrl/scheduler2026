@@ -81,9 +81,12 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* Form */
 .fp{padding:16px;}
 .sec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
-.opt-divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;padding:0 4px;}
-.opt-divider span{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;}
+.opt-divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;padding:0 4px;cursor:pointer;user-select:none;}
+.opt-divider span{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;display:flex;align-items:center;gap:4px;}
 .opt-divider::before,.opt-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.opt-divider .opt-arr{font-size:12px;transition:transform .2s;display:inline-block;}
+.opt-body{transition:none;}
+.opt-body.hidden{display:none;}
 
 .sh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .st{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;font-family:var(--mono);}
@@ -288,7 +291,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
-    <div class="opt-divider"><span>オプション</span></div>
+    <div class="opt-divider" onclick="togOpt(this)"><span><span class="opt-arr">▼</span> オプション</span></div>
+    <div class="opt-body" id="i-opt-body">
     <div class="sec">
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
@@ -503,7 +507,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
 
-    <div class="opt-divider"><span>オプション</span></div>
+    <div class="opt-divider" onclick="togOpt(this)"><span><span class="opt-arr">▼</span> オプション</span></div>
+    <div class="opt-body" id="att-opt-body">
     <!-- 移動時間 -->
     <div class="sec" id="i-travel-sec">
       <div class="sh">
@@ -632,6 +637,472 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    </div>
+    <div class="submit-area" id="i-submit-area"></div>
+  </div>
+
+  <!-- TRAVEL FORM -->
+  <div class="screen fp" id="screen-travel">
+
+    <!-- パターン選択 -->
+    <div class="sec">
+      <div class="sh"><div class="st">移動パターン</div></div>
+      <div class="sb">
+        <div class="cg" style="flex-direction:column;gap:8px;" id="tv-pattern-chips">
+          <div class="chip cb"  id="tv-p-go"     onclick="selTvPattern(this,'go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
+          <div class="chip"     id="tv-p-back"   onclick="selTvPattern(this,'back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
+          <div class="chip"     id="tv-p-office" onclick="selTvPattern(this,'office')">🏢 → 🏭　出社から現場</div>
+          <div class="chip"     id="tv-p-return" onclick="selTvPattern(this,'return')">🏭 → 🏢　帰社</div>
+          <div class="chip"     id="tv-p-site"   onclick="selTvPattern(this,'site')"  >🏭 → 🏭　現場移動</div>
+          <div class="chip"     id="tv-p-car"    onclick="selTvPattern(this,'car')"   >🚗 車両持ち帰り</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 現場名 -->
+    <div class="sec">
+      <div class="sh"><div class="st">現場</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>現場名<span class="req">*</span></label>
+          <div class="cr2">
+            <select id="tv-cust" onchange="onTvCustChange()" oninput="onTvCustChange()"><option value="">— 選択 —</option></select>
+            <button class="birr" onclick="openTvIrr()">✏️</button>
+          </div>
+        </div>
+        <!-- 現場移動のとき：移動元も入力 -->
+        <div class="field" id="tv-from-field" style="display:none;margin-bottom:0;">
+          <label>移動元の現場名</label>
+          <input type="text" id="tv-from-site" placeholder="例：前の現場名">
+        </div>
+      </div>
+    </div>
+
+    <!-- 日時 -->
+    <div class="sec">
+      <div class="sh"><div class="st">日時</div></div>
+      <div class="sb">
+        <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="tv-date" oninput="updateTvPreview()"></div>
+        <div class="fr">
+          <div class="field"><label>開始</label><input type="time" id="tv-start" value="08:00" oninput="calcTvEnd()"></div>
+          <div class="field"><label>終了</label><input type="time" id="tv-end" value="09:00" oninput="updateTvPreview()"></div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>移動時間（分）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">開始時刻から自動計算</span></label>
+          <input type="number" id="tv-min" value="60" min="5" max="480" style="width:90px;text-align:center;" oninput="calcTvEnd()">
+        </div>
+      </div>
+    </div>
+
+    <!-- 件名プレビュー -->
+    <div class="sec">
+      <div class="sh"><div class="st">登録内容</div></div>
+      <div class="sb">
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="tv-title-preview">移動パターンと現場を選択してください</div>
+      </div>
+    </div>
+
+    <div class="submit-area" id="tv-submit-area"></div>
+  </div>
+
+  <!-- ATTENDANCE FORM -->
+  <div class="screen fp" id="screen-attendance">
+
+    <!-- 種別 -->
+    <div class="sec">
+      <div class="sh"><div class="st">種別</div></div>
+      <div class="sb">
+        <div class="cg" id="att-type-chips">
+          <div class="chip cb"  onclick="selAttType(this,'有休','allday')">🌴 有休</div>
+          <div class="chip"     onclick="selAttType(this,'午前半休','half')">🌅 午前半休</div>
+          <div class="chip"     onclick="selAttType(this,'午後半休','half')">🌇 午後半休</div>
+          <div class="chip"     onclick="selAttType(this,'振替休日','allday')">🔄 振替休日</div>
+          <div class="chip"     onclick="selAttType(this,'社内勤務','work')">🏢 社内勤務</div>
+          <div class="chip"     onclick="selAttType(this,'休日出勤','work')">💼 休日出勤</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 日時 -->
+    <div class="sec">
+      <div class="sh"><div class="st">日時</div></div>
+      <div class="sb">
+        <div class="field-row fr">
+          <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
+          <div class="field" id="att-end-date-field" style="display:none;">
+            <label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休・連続勤務時</span></label>
+            <input type="date" id="att-end-date" oninput="updateAttPreview()">
+          </div>
+        </div>
+        <!-- 振替元日付（振替休日選択時） -->
+        <div id="att-furikae-source-field" style="display:none;">
+          <div class="field" style="margin-bottom:0;">
+            <label>何日の振替ですか？<span class="req">*</span></label>
+            <input type="date" id="att-furikae-source" oninput="updateAttPreview()">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">件名：振替休日（〇月〇日分）になります</div>
+          </div>
+        </div>
+        <!-- 繰り返し（社内勤務・休日出勤用） -->
+        <div id="att-rec-field" style="display:none;">
+          <div class="field" style="margin-bottom:0;">
+            <div class="tw">
+              <span style="font-size:13px;color:var(--text2);">🔁 繰り返し登録（平日のみ）</span>
+              <label class="tog"><input type="checkbox" id="att-rec-tog" onchange="togAttRec()"><div class="tt"></div><div class="tth"></div></label>
+            </div>
+            <div id="att-rec-preview" style="font-size:11px;color:var(--green);font-family:var(--mono);margin-top:6px;display:none;">✅ 終了日まで平日のみ毎日登録されます（土日祝は除く）</div>
+          </div>
+        </div>
+        <!-- 時間（終日以外） -->
+        <div id="att-time-row" style="display:none;">
+          <div class="fr">
+            <div class="field"><label>開始</label><input type="time" id="att-start" value="09:00" oninput="updateAttPreview()"></div>
+            <div class="field"><label>終了</label><input type="time" id="att-end" value="13:00" oninput="updateAttPreview()"></div>
+          </div>
+        </div>
+        <!-- 終日トグル -->
+        <div class="field" style="margin-bottom:0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="tog"><input type="checkbox" id="att-allday" checked onchange="togAttAllday()"><div class="tt"></div><div class="tth"></div></label>
+            <span style="font-size:13px;color:var(--text2);">終日</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 件名プレビュー -->
+    <div class="sec">
+      <div class="sh"><div class="st">登録内容</div></div>
+      <div class="sb">
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="att-title-preview">種別を選択してください</div>
+        <div class="field" style="margin-top:12px;margin-bottom:0;">
+          <label>メモ（任意）</label>
+          <input type="text" id="att-memo" placeholder="例：家族旅行、通院など">
+        </div>
+      </div>
+    </div>
+
+    <!-- 振替休日（休日出勤時のみ表示） -->
+    <div class="sec" id="att-furikae-sec" style="display:none;">
+      <div class="sh">
+        <div class="st">🔄 振替休日も登録する</div>
+        <div class="tw">
+          <span class="tl" id="att-furikae-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="att-furikae-tog" onchange="togFurikae()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="att-furikae-body">
+        <div class="field" style="margin-bottom:0;">
+          <label>振替休日の日付<span class="req">*</span></label>
+          <input type="date" id="att-furikae-date">
+        </div>
+        <div class="rbox" style="margin-top:10px;">📋 振替休日の予定が自動で追加されます（終日・空き時間）</div>
+      </div>
+    </div>
+
+
+    <div class="opt-divider" onclick="togOpt(this)"><span><span class="opt-arr">▼</span> オプション</span></div>
+    <div class="opt-body" id="m-opt-body">    </div>
+    <div class="submit-area" id="m-submit-area"></div>
+  </div>
+
+  <!-- INSPECTION FORM -->
+  <div class="screen fp" id="screen-inspection">
+    <div class="sec">
+      <div class="sh"><div class="st">現場・号機</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>お客さま<span class="req">*</span></label>
+          <div class="cr2">
+            <select id="i-cust" onchange="onCustChange()" oninput="onCustChange()"><option value="">— 選択 —</option></select>
+            <button class="birr" onclick="openQuickAddCust()" title="新規物件を登録">＋</button>
+            <button class="birr" onclick="openIrr()">✏️</button>
+          </div>
+        </div>
+        <div class="field"><label>号機（複数選択可）<span class="req">*</span></label><div class="ug" id="i-ug"><span style="font-size:12px;color:var(--text3)">お客さまを選択してください</span></div></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">点検種別・担当</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>点検種別<span class="req">*</span></label>
+          <div class="cg" id="i-insp">
+            <div class="chip cb" onclick="selChip('i-insp',this,'cb','定期点検')">🔵 定期点検</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cg2','都度点検')">🟢 都度点検</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cr','トラブル')">🔴 トラブル</div>
+            <div class="chip" onclick="selChip('i-insp',this,'cp','その他')">🟣 その他</div>
+          </div>
+        </div>
+        <div class="field" id="i-other-field" style="display:none;">
+          <label>内容<span class="req">*</span></label>
+          <input type="text" id="i-other-text" placeholder="例：打合せ、受領書受取、立会いなど" oninput="updateITitle()">
+        </div>
+        <div class="field">
+          <label>担当区分<span class="req">*</span></label>
+          <div class="cg" id="i-asgn">
+            <div class="chip cb" onclick="selAssign(this,'cb','','自社対応')">🔵 自社対応</div>
+            <div class="chip" onclick="selAssign(this,'co','委','協力会社委託')">🟠 委託</div>
+            <div class="chip" onclick="selAssign(this,'cg2','同','協力会社同行')">🟢 同行</div>
+          </div>
+        </div>
+        <div class="field" id="i-pf" style="display:none">
+          <label>協力会社</label>
+          <select id="i-partner" onchange="updateITitle()"><option value="">— 選択 —</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh">
+        <div class="st">日時</div>
+        <div class="tw">
+          <span class="tl" id="i-split-lbl" style="font-size:10px;">分割登録</span>
+          <label class="tog"><input type="checkbox" id="i-split-tog" onchange="togSplitMode()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb">
+        <div class="fr">
+          <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
+          <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;">
+            <div class="tw" style="height:44px;">
+              <span style="font-size:13px;color:var(--text2);">🌙 日またぎ</span>
+              <label class="tog"><input type="checkbox" id="i-overnight" onchange="togOvernight()"><div class="tt"></div><div class="tth"></div></label>
+            </div>
+          </div>
+        </div>
+        <!-- 通常モード -->
+        <div id="i-normal-time">
+          <div class="fr">
+            <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
+            <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
+          </div>
+        </div>
+        <!-- 分割モード -->
+        <div id="i-split-mode" style="display:none;">
+          <div style="background:var(--adim);border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--accent);font-family:var(--mono);margin-bottom:8px;">① 前半</div>
+            <div class="fr" style="margin-bottom:8px;">
+              <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s1-start" value="09:00"></div>
+              <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s1-end" value="13:00"></div>
+            </div>
+            <div class="field">
+              <label>担当区分</label>
+              <div class="cg" id="i-s1-asgn">
+                <div class="chip cb"  onclick="selSplitAssign(1,this,'cb','','自社対応')">🔵 自社</div>
+                <div class="chip"     onclick="selSplitAssign(1,this,'co','委','協力会社委託')">🟠 委託</div>
+                <div class="chip"     onclick="selSplitAssign(1,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>表示方法</label>
+              <div class="cg" id="i-s1-showas" style="flex-wrap:wrap;">
+                <div class="chip" id="i-s1-sa-free" onclick="selSplitShowAs(1,'free')">空き時間</div>
+                <div class="chip cb" id="i-s1-sa-busy" onclick="selSplitShowAs(1,'busy')">予定あり</div>
+                <div class="chip" id="i-s1-sa-tentative" onclick="selSplitShowAs(1,'tentative')">仮の予定</div>
+                <div class="chip" id="i-s1-sa-oof" onclick="selSplitShowAs(1,'oof')">外出中</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--gdim);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:11px;color:var(--green);font-family:var(--mono);margin-bottom:8px;">② 後半</div>
+            <div class="fr" style="margin-bottom:8px;">
+              <div class="field" style="margin-bottom:0;"><label>開始</label><input type="time" id="i-s2-start" value="13:00"></div>
+              <div class="field" style="margin-bottom:0;"><label>終了</label><input type="time" id="i-s2-end" value="17:00"></div>
+            </div>
+            <div class="field">
+              <label>担当区分</label>
+              <div class="cg" id="i-s2-asgn">
+                <div class="chip cb"  onclick="selSplitAssign(2,this,'cb','','自社対応')">🔵 自社</div>
+                <div class="chip"     onclick="selSplitAssign(2,this,'co','委','協力会社委託')">🟠 委託</div>
+                <div class="chip"     onclick="selSplitAssign(2,this,'cg2','同','協力会社同行')">🟢 同行</div>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label>表示方法</label>
+              <div class="cg" id="i-s2-showas" style="flex-wrap:wrap;">
+                <div class="chip" id="i-s2-sa-free" onclick="selSplitShowAs(2,'free')">空き時間</div>
+                <div class="chip cb" id="i-s2-sa-busy" onclick="selSplitShowAs(2,'busy')">予定あり</div>
+                <div class="chip" id="i-s2-sa-tentative" onclick="selSplitShowAs(2,'tentative')">仮の予定</div>
+                <div class="chip" id="i-s2-sa-oof" onclick="selSplitShowAs(2,'oof')">外出中</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 繰り返し（長期点検） -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 繰り返し（長期点検）</div>
+        <div class="tw">
+          <span class="tl" id="i-rec-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-rec-tog" onchange="togRecurrence()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-rec-body">
+        <div class="field">
+          <label>繰り返しパターン</label>
+          <div class="cg" id="i-rec-chips">
+            <div class="chip cb" onclick="selRecPattern(this,'WEEKLY;BYDAY=MO,TU,WE,TH,FR','平日のみ')">平日のみ</div>
+            <div class="chip" onclick="selRecPattern(this,'DAILY','毎日（土日含む）')">毎日</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>繰り返し終了日<span class="req">*</span></label>
+          <input type="date" id="i-rec-end" oninput="updateRecPreview()">
+        </div>
+        <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
+      </div>
+    </div>
+
+    <!-- 作業内容 (新規追加) -->
+    <div class="sec">
+      <div class="sh"><div class="st">作業内容</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>作業内容<span style="font-size:10px;color:var(--text3);margin-left:6px;font-family:var(--mono)">件名に反映されます</span></label>
+          <input type="text" id="i-work" placeholder="例：定期点検、水処理設備整備" oninput="updateITitle()">
+        </div>
+        <!-- 件名プレビュー -->
+        <div class="title-preview-label">件名プレビュー</div>
+        <div class="title-preview" id="i-title-preview">入力すると自動生成されます</div>
+      </div>
+    </div>
+
+
+    <div class="opt-divider" onclick="togOpt(this)"><span><span class="opt-arr">▼</span> オプション</span></div>
+    <div class="opt-body" id="att-opt-body">
+    <!-- 移動時間 -->
+    <div class="sec" id="i-travel-sec">
+      <div class="sh">
+        <div class="st">🚗 移動予定</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">空き時間で自動追加</div>
+      </div>
+      <div class="sb">
+        <div class="field">
+          <label>移動時間（分）</label>
+          <input type="number" id="i-travel-min" value="60" min="5" max="480" style="width:100px;text-align:center;">
+        </div>
+        <!-- 通常モード用 -->
+        <div id="i-travel-normal">
+          <div class="field">
+            <label>移動パターン（複数選択可）</label>
+            <div class="cg" style="flex-direction:column;gap:8px;">
+              <div class="chip" id="i-tr-go"     onclick="togTravel('go')"    >🏠 → 🏭　直行（自宅 → 現場）</div>
+              <div class="chip" id="i-tr-back"   onclick="togTravel('back')"  >🏭 → 🏠　直帰（現場 → 自宅）</div>
+              <div class="chip" id="i-tr-office" onclick="togTravel('office')">🏢 → 🏭　出社から現場</div>
+              <div class="chip" id="i-tr-return" onclick="togTravel('return')">🏭 → 🏢　帰社</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>現場移動（任意）<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:6px;">前の現場名を入力</span></label>
+            <input type="text" id="i-tr-from-site" placeholder="例：前の現場名（空欄でスキップ）">
+          </div>
+        </div>
+        <!-- 分割モード用 -->
+        <div id="i-travel-split" style="display:none;">
+          <div class="field">
+            <label style="color:var(--accent);font-family:var(--mono);font-size:11px;">① 前半の移動</label>
+            <div class="cg" style="flex-direction:column;gap:6px;margin-top:6px;">
+              <div class="chip" id="i-tr-s1-go"     onclick="togSplitTravel(1,'go')"    >🏠 → 🏭　直行</div>
+              <div class="chip" id="i-tr-s1-office" onclick="togSplitTravel(1,'office')">🏢 → 🏭　出社後移動</div>
+              <div class="chip" id="i-tr-s1-back"   onclick="togSplitTravel(1,'back')"  >🏭 → 🏠　直帰（前半で終わる場合）</div>
+              <div class="chip" id="i-tr-s1-return" onclick="togSplitTravel(1,'return')">🏭 → 🏢　帰社（前半で終わる場合）</div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label style="color:var(--green);font-family:var(--mono);font-size:11px;">② 後半の移動</label>
+            <div class="cg" style="flex-direction:column;gap:6px;margin-top:6px;">
+              <div class="chip" id="i-tr-s2-go"     onclick="togSplitTravel(2,'go')"    >🏠 → 🏭　直行（自宅から後半現場）</div>
+              <div class="chip" id="i-tr-s2-office" onclick="togSplitTravel(2,'office')">🏢 → 🏭　出社後移動</div>
+              <div class="chip" id="i-tr-s2-site"   onclick="togSplitTravel(2,'site')"  >🏭 → 🏭　前半現場から後半現場</div>
+              <div class="chip" id="i-tr-s2-back"   onclick="togSplitTravel(2,'back')"  >🏭 → 🏠　直帰</div>
+              <div class="chip" id="i-tr-s2-return" onclick="togSplitTravel(2,'return')">🏭 → 🏢　帰社</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表示方法 -->
+    <div class="sec" id="i-showas-sec">
+      <div class="sh">
+        <div class="st">📅 Outlook 表示方法</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">担当区分で自動設定</div>
+      </div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="i-showas-chips">
+          <div class="chip" id="i-sa-free" onclick="selShowAs('i','free')">🔲 空き時間</div>
+          <div class="chip cb" id="i-sa-busy" onclick="selShowAs('i','busy')">🔳 予定あり</div>
+          <div class="chip" id="i-sa-tentative" onclick="selShowAs('i','tentative')">❓ 仮の予定</div>
+          <div class="chip" id="i-sa-oof" onclick="selShowAs('i','oof')">外出中</div>
+          <div class="chip" id="i-sa-workingElsewhere" onclick="selShowAs('i','workingElsewhere')">他の場所で作業</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 色分類 -->
+    <div class="sec" id="i-cat-sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cat-chips" id="i-cat-chips">
+          <div class="cat-chip cat-none active" onclick="selCat(this,'','','i')">なし</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="i-pl">なし</span><label class="tog"><input type="checkbox" id="i-pt" onchange="togPrep('i')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="i-pb">
+        <div class="lrows" id="i-todo-rows"><div class="lr"><input type="text" placeholder="例：安全帳票を作成する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('i-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="i-pd" value="3" min="1" max="30" oninput="calcR('i')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="i-ptime" value="09:00" oninput="calcR('i')"></div>
+          </div>
+          <div class="rbox" id="i-rbox">📅 作業日を入力すると計算します</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sh"><div class="st">メモ・備考</div></div>
+      <div class="sb"><textarea id="i-memo" placeholder="特記事項、持参品、注意事項など..."></textarea></div>
+    </div>
+    <!-- 振替休日 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔄 振替休日</div>
+        <div class="tw">
+          <span class="tl" id="i-furikae-lbl">なし</span>
+          <label class="tog"><input type="checkbox" id="i-furikae-tog" onchange="togInspFurikae()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+      <div class="sb pb" id="i-furikae-body">
+        <!-- 作業期間内の土日祝カウント -->
+        <div id="i-furikae-scan" style="margin-bottom:12px;">
+          <button class="badd" onclick="scanHolidays()" style="border-style:solid;border-color:var(--accent);color:var(--accent);">
+            🔍 作業期間内の土日祝を検索
+          </button>
+          <div id="i-holiday-list" style="margin-top:10px;"></div>
+        </div>
+        <!-- 追加済み振替休日リスト -->
+        <div id="i-furikae-added" style="margin-bottom:8px;"></div>
+        <!-- 手動追加 -->
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+          <input type="date" id="i-furikae-date" style="flex:1;">
+          <button class="bmadd" onclick="addFurikaeDate(document.getElementById('i-furikae-date').value)">＋ 追加</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:6px;">追加した日に振替休日の予定が登録されます（終日・空き時間）</div>
+      </div>
+    </div>
+
+    </div>
     <div class="submit-area" id="i-submit-area"></div>
   </div>
 
@@ -821,6 +1292,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    </div>
     <div class="submit-area" id="att-submit-area"></div>
   </div>
 
@@ -3333,6 +3805,16 @@ function initTheme(){
   if(tog) tog.checked = isLight;
   const label = document.getElementById('theme-label');
   if(label) label.textContent = isLight ? 'ライトモード' : 'ダークモード';
+}
+
+function togOpt(btn){
+  const formId = btn.closest('.screen').id.replace('screen-','');
+  const body = document.getElementById(formId + '-opt-body');
+  const arr  = btn.querySelector('.opt-arr');
+  if(!body) return;
+  const hidden = body.classList.contains('hidden');
+  body.classList.toggle('hidden', !hidden);
+  if(arr) arr.style.transform = hidden ? '' : 'rotate(-90deg)';
 }
 
 function togHelp(btn){

@@ -1417,6 +1417,9 @@ function goForm(fid,sub){
     if(hl) hl.innerHTML='';
     const ft=document.getElementById('i-furikae-tog');
     if(ft){ ft.checked=false; document.getElementById('i-furikae-body').classList.remove('open'); document.getElementById('i-furikae-lbl').textContent='なし'; }
+    renderSubmitButtons('i');
+    showScreen('inspection');
+    return;
   }
   if(fid==='attendance'){
     const _n=new Date(); const today=new Date(_n.getTime()+9*3600000).toISOString().split('T')[0];

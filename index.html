@@ -922,130 +922,25 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 <div class="screen" id="screen-help" style="padding:16px;">
 
   <div style="margin-bottom:16px;">
-    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">セットアップガイド</div>
-    <div style="font-size:12px;color:var(--text2);">タップして各セクションを開いてください</div>
+    <div style="font-size:18px;font-weight:700;margin-bottom:4px;">ヘルプ</div>
   </div>
 
-  <!-- Section 1 -->
+  <!-- iPhoneで使う -->
   <div class="hcard">
     <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--adim);color:var(--accent)">1</span>
-      <span class="htitle">アプリの準備</span>
+      <span class="htag" style="background:var(--adim);color:var(--accent)">📱</span>
+      <span class="htitle">iPhoneで使う</span>
       <span class="harr">›</span>
     </button>
     <div class="hbody">
-      <div class="hq">Q. どうやって使い始めるの？</div>
-      <div class="ha">index.htmlファイルをダブルクリックするだけでブラウザで開けます。インストール不要です。</div>
-
       <div class="hq">Q. iPhoneでも使えますか？</div>
-      <div class="ha">使えます。AirDrop・iCloud Drive・メール添付などでiPhoneにindex.htmlを転送してSafariで開いてください。</div>
-
+      <div class="ha">使えます。GitHub PagesのURL（https://t1ec9h-ctrl.github.io/scheduler2026/）をSafariで開いてください。</div>
       <div class="hq">Q. iPhoneのホーム画面に追加するには？</div>
       <div class="ha">Safariで開いた状態で、画面下の「共有ボタン（□↑）」→「ホーム画面に追加」をタップ。アプリのように使えます。<br><span class="hnote">※ ChromeではなくSafariを使ってください</span></div>
-
-      <div class="hq">Q. GitHubに上げると情報が漏れませんか？</div>
-      <div class="ha">漏れません。お客さまや号機のデータはブラウザ内にのみ保存されます。GitHubにアップロードされるのはHTMLファイルの中身だけで、個人情報は一切含まれていません。</div>
-
-      <div class="hq">Q. メンバーへの共有はどうするの？</div>
-      <div class="ha">index.htmlをAirDrop・メール・チャットなどで送るだけです。受け取った人はダブルクリックすれば使えます。各自のブラウザにデータが保存されるので、情報が混ざることもありません。</div>
-    </div>
-  </div>
-
-  <!-- Section 2 -->
-  <div class="hcard">
-    <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--gdim);color:var(--green)">2</span>
-      <span class="htitle">Power Automateの設定</span>
-      <span class="harr">›</span>
-    </button>
-    <div class="hbody">
-      <div class="hq">Q. Power Automateって何？追加費用はかかる？</div>
-      <div class="ha">Microsoft 365に含まれている自動化ツールです。追加費用はかかりません。make.powerautomate.comからアクセスできます。</div>
-
-      <div class="hq">Q. フローの作り方は？</div>
-      <div class="ha">
-        ① make.powerautomate.com にサインイン<br>
-        ② 「作成」→「自動化したクラウドフロー」<br>
-        ③ トリガー：「新しいメールが届いたとき (V3)」を選択<br>
-        ④ 件名フィルター：<span class="hcode">SCHED:</span> を入力<br>
-        ⑤ 「新しいステップ」→「HTMLからテキスト」を追加（コンテンツ：本文）<br>
-        ⑥ 「新しいステップ」→「JSONの解析」を追加<br>
-        ⑦ 「新しいステップ」→「イベントの作成 (V4)」を追加
-      </div>
-
-      <div class="hq">Q. JSONの解析のスキーマは？</div>
-      <div class="ha">
-        以下をそのままコピペしてください：
-        <pre class="hpre">{"type":"object","properties":{"title":{"type":"string"},"start":{"type":"string"},"end":{"type":"string"},"location":{"type":"string"},"category":{"type":"string"},"showAs":{"type":"string"},"units":{"type":"string"},"assign":{"type":"string"},"work":{"type":"string"},"prep":{"type":"string"},"memo":{"type":"string"},"rrule":{"type":"string"},"travelGoStart":{"type":"string"},"travelGoEnd":{"type":"string"},"travelBackStart":{"type":"string"},"travelBackEnd":{"type":"string"},"travelLabel":{"type":"string"}}}</pre>
-      </div>
-
-      <div class="hq">Q. 直行・直帰の移動予定をPower Automateで登録するには？</div>
-      <div class="ha">
-        メインのイベント作成の後に「条件」ステップを2つ追加します：<br><br>
-        <strong>直行の条件：</strong><br>
-        条件：<span class="hcode">travelGoStart</span> が空でない<br>
-        「はいの場合」：イベントの作成（V4）<br>
-        　件名：<span class="hcode">🚗 移動 → @{body('JSON_の解析')?['travelLabel']}</span><br>
-        　開始：<span class="hcode">body('JSON_の解析')?['travelGoStart']</span><br>
-        　終了：<span class="hcode">body('JSON_の解析')?['travelGoEnd']</span><br>
-        　表示方法：空き時間（free）<br><br>
-        <strong>直帰の条件：</strong><br>
-        条件：<span class="hcode">travelBackStart</span> が空でない<br>
-        「はいの場合」：同様に設定
-      </div>
-
-      <div class="hq">Q. 繰り返し（長期点検）をPower Automateで設定するには？</div>
-      <div class="ha">
-        Power AutomateのOutlookイベント作成では繰り返しの設定が複雑なため、<strong>長期点検はICSダウンロード方式を推奨します。</strong><br>
-        ICSファイルには繰り返しルール（平日のみ／毎日）が自動で含まれており、ダブルタップするだけで繰り返し予定が一括登録されます。
-      </div>
-
-      <div class="hq">Q. ICSで使っているけど色分類もしたい</div>
-      <div class="ha">
-        ICSファイルでは色分類は反映されません。色分類を使いたい予定だけPower Automate方式で送る方法があります：<br><br>
-        ① 設定タブで「Power Automate連携」と「ICSダウンロード」を<strong>両方ON</strong>にする<br>
-        ② フォームに「📨 メール送信」「📥 ICS保存」の2つのボタンが表示される<br>
-        ③ 色分類が必要な予定は「📨 メール送信」、それ以外は「📥 ICS保存」を使い分ける<br><br>
-        <span class="hnote">※ 設定タブで「🎨 色分類マスタ」の名前をOutlookの色分類名と完全一致させてください</span>
-      </div>
-
-      <div class="hq">Q. フローをメンバーに共有するには？</div>
-      <div class="ha">
-        ① フローを開いて右上「…」→「エクスポート」→「パッケージ（.zip）」<br>
-        ② zipファイルをメンバーに共有<br>
-        ③ メンバーはインポート後、メールアドレスを自分のものに変更する
-      </div>
-    </div>
-  </div>
-
-  <!-- Section 3 -->
-  <div class="hcard">
-    <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--adim);color:var(--accent)">3</span>
-      <span class="htitle">Outlookの設定</span>
-      <span class="harr">›</span>
-    </button>
-    <div class="hbody">
-      <div class="hq">Q. 「登録する」ボタンを押したらNew Outlookが開いてしまう</div>
-      <div class="ha">
-        Windowsのデフォルトメールアプリを変更してください：<br>
-        ① Windowsキー＋I で設定を開く<br>
-        ② 「アプリ」→「既定のアプリ」<br>
-        ③ 検索ボックスに「Outlook」と入力<br>
-        ④ 「Outlook (classic)」をクリック<br>
-        ⑤ 「MAILTO」の項目を「Outlook (classic)」に変更
-      </div>
-
-      <div class="hq">Q. Classic OutlookとNew Outlookの違いは？</div>
-      <div class="ha">このアプリはClassic Outlookと組み合わせて動作確認しています。New Outlookでも動作しますが、デフォルトメールアプリの設定によって意図しない方が開くことがあります。</div>
-
-      <div class="hq">Q. iPhoneでメールを送ると何のアプリが開く？</div>
-      <div class="ha">iPhoneの標準メールアプリが開きます。会社のOutlookアカウントをiPhoneのメールアプリに登録しておくと、そのまま送信できます。設定 →「Outlook」→「デフォルトのメールアプリ」でOutlookアプリに変更することもできます。</div>
-
       <div class="hq">Q. iPhoneでICSをダウンロードするとiOS標準カレンダーに入ってしまう</div>
       <div class="ha">
         iOSの仕様です。ICSファイルはiPhoneの標準カレンダーアプリが優先的に処理するため、OutlookカレンダーではなくiOS標準カレンダーに登録されます。<br><br>
-        <strong>iPhoneからOutlookに登録するには Power Automate方式を使ってください：</strong><br>
+        <strong>iPhoneからOutlookに登録するにはPower Automate方式を使ってください：</strong><br>
         ① 設定タブで「Power Automate連携」をONにしてメールアドレスを入力<br>
         ② 「📨 メール送信」ボタンを押す<br>
         ③ メールアプリが開くので送信するだけ<br><br>
@@ -1054,140 +949,62 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
   </div>
 
-  <!-- Section 4 -->
+  <!-- 色分類 -->
   <div class="hcard">
     <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--odim);color:var(--orange)">4</span>
-      <span class="htitle">よくあるエラーと対処法</span>
+      <span class="htag" style="background:var(--adim);color:var(--accent)">🎨</span>
+      <span class="htitle">色分類の使い方</span>
       <span class="harr">›</span>
     </button>
     <div class="hbody">
-      <div class="hq">Q. Power AutomateでJSONの解析エラーが出る</div>
+      <div class="hq">Q. ICSで使っているけど色分類もしたい</div>
       <div class="ha">
-        メール本文がHTML形式で届いているのが原因です。<br>
-        対処：「JSONの解析」ステップの<strong>前</strong>に「HTMLからテキスト」ステップを追加し、「JSONの解析」のコンテンツをその出力結果に変更してください。
-        <div class="herr">アクション 'JSON_の解析' に失敗しました: The 'content' property... cannot be parsed: 'Unexpected character encountered while parsing value: &lt;'</div>
-        このエラーが出たら上記の対処をしてください。
+        ICSファイルでも色分類は反映されます（Outlookの拡張プロパティ対応）。<br><br>
+        ① Outlookで色分類を作る（例：外出→オレンジ、勤務→ピンク）<br>
+        ② 設定タブ→「🎨 色分類マスタ」でOutlookと<strong>同じ名前</strong>で登録<br>
+        ③ 各フォームで色分類を選んで登録するだけ<br><br>
+        <span class="hnote">※ Power Automate方式でも同様に使えます</span>
       </div>
-
-      <div class="hq">Q. AzureポータルでアプリをAzure登録しようとしたら「アクセス許可がありません」と表示された</div>
-      <div class="ha">会社のAzure管理者権限が必要な操作です。このアプリはAzure登録なしで動作するPower Automate連携またはICS方式で使用してください。Azure登録は不要です。</div>
-
-      <div class="hq">Q. 「登録する」ボタンを押しても何も起きない</div>
-      <div class="ha">設定タブでメールアドレスが入力されているか確認してください。またはICSダウンロード方式に切り替えて試してください。</div>
-
-      <div class="hq">Q. ICSファイルをダブルクリックしてもOutlookが開かない</div>
-      <div class="ha">Windowsの既定のアプリでICSファイルの関連付けがOutlookになっていない可能性があります。ICSファイルを右クリック→「プログラムから開く」→「Outlook」を選んでください。</div>
-
-      <div class="hq">Q. Power Automateのフローが動いていない気がする</div>
-      <div class="ha">make.powerautomate.comでフローの「実行履歴」を確認してください。エラーが表示されている場合は、各ステップのエラー内容をもとに対処してください。</div>
     </div>
   </div>
 
-  <!-- Section 5 -->
+  <!-- Outlook設定 -->
   <div class="hcard">
     <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--gdim);color:var(--green)">5</span>
+      <span class="htag" style="background:var(--adim);color:var(--accent)">📧</span>
+      <span class="htitle">Outlookの設定</span>
+      <span class="harr">›</span>
+    </button>
+    <div class="hbody">
+      <div class="hq">Q. 「登録する」ボタンを押したらNew Outlookが開いてしまう</div>
+      <div class="ha">
+        Classic Outlookをデフォルトメールアプリに設定してください。<br>
+        Windowsの設定 →「アプリ」→「既定のアプリ」→「メール」→「Outlook（Classic）」を選択。
+      </div>
+      <div class="hq">Q. Power Automateのフロー設定（JSONスキーマ）</div>
+      <div class="ha">
+        「JSONの解析」ステップのスキーマはヘルプ→設定タブで確認できます。<br>
+        基本構成：トリガー（SCHED:）→HTMLからテキスト→JSONの解析→それぞれに適用する→イベント作成×6条件→メール削除
+      </div>
+    </div>
+  </div>
+
+  <!-- データ -->
+  <div class="hcard">
+    <button class="hacc" onclick="togHelp(this)">
+      <span class="htag" style="background:var(--adim);color:var(--accent)">💾</span>
       <span class="htitle">データとセキュリティ</span>
       <span class="harr">›</span>
     </button>
     <div class="hbody">
       <div class="hq">Q. 入力したお客さまや号機のデータはどこに保存される？</div>
-      <div class="ha">このブラウザ（またはSafari）の中だけに保存されます。サーバーやクラウドには一切送信されません。他の端末では共有されません。</div>
-
+      <div class="ha">このブラウザのローカルストレージにのみ保存されます。サーバーには一切送信されません。GitHubにアップロードされるのはHTMLファイルの中身だけで、個人情報は含まれていません。</div>
       <div class="hq">Q. 別の端末に引き継ぎたい</div>
-      <div class="ha">設定タブの「マスタをエクスポート」でJSONファイルを書き出し、引き継ぎ先の端末でインポートしてください。予定内容は含まれず、お客さま・号機・協力会社の一覧のみです。</div>
-
-      <div class="hq">Q. ブラウザを変えたりキャッシュを消したらデータは消える？</div>
-      <div class="ha">消えます。別のブラウザや端末に移行する前に必ずエクスポートしてバックアップを取ってください。iPhoneでSafariのキャッシュをクリアした場合も同様です。</div>
-
-      <div class="hq">Q. Power Automateで送るメールに個人情報は含まれる？</div>
-      <div class="ha">メールには点検内容（お客さま名・号機・作業内容など）が含まれます。メールは自分自身のOutlookアドレス宛に送られ、Power Automateがそれを処理してカレンダーに登録します。社外には送信されません。</div>
+      <div class="ha">設定タブ→「📤 マスタをエクスポート」でJSONファイルを保存し、新しい端末で「📥 インポート」してください。</div>
+      <div class="hq">Q. ブラウザのキャッシュを消したらデータは消える？</div>
+      <div class="ha">「サイトデータ」を削除するとデータが消えます。定期的にエクスポートしてバックアップを取ってください。</div>
     </div>
   </div>
-
-  <!-- Section 6 -->
-  <div class="hcard">
-    <button class="hacc" onclick="togHelp(this)">
-      <span class="htag" style="background:var(--pdim);color:var(--purple)">6</span>
-      <span class="htitle">これって何？安全なの？</span>
-      <span class="harr">›</span>
-    </button>
-    <div class="hbody">
-
-      <div class="hq">Q. これはアプリ？ウイルスじゃないの？</div>
-      <div class="ha">
-        アプリではなく<strong>HTMLファイル</strong>です。ブラウザ（ChromeやSafari）で開くWebページと同じ仕組みで動いています。インストールは一切不要で、ウイルスソフトに引っかかるものも何も入っていません。<br><br>
-        <div style="background:var(--card2);border-radius:8px;padding:12px;font-size:12px;color:var(--text2);line-height:1.8;">
-          📄 index.html<br>
-          　└ ブラウザが読み取るテキストファイル<br>
-          　└ 中身はHTML・CSS・JavaScriptのみ<br>
-          　└ 外部サーバーへの接続：なし<br>
-          　└ 個人情報の送信：なし
-        </div>
-      </div>
-
-      <div class="hq">Q. 入力した情報はどこに保存されている？</div>
-      <div class="ha">
-        入力データは<strong>自分のブラウザの中だけ</strong>に保存されます。インターネットにも社外にも出ません。
-        <div style="margin:10px 0;background:var(--card2);border-radius:8px;padding:14px;font-size:12px;line-height:2;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:var(--gdim);color:var(--green);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;">保存される場所</span>
-          </div>
-          📱 あなたのスマホ・PC のブラウザ内<br>
-          　（「ローカルストレージ」という領域）<br><br>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:var(--rdim);color:var(--red);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;">保存されない場所</span>
-          </div>
-          ❌ インターネット上のサーバー<br>
-          ❌ クラウド（OneDrive・iCloudなど）<br>
-          ❌ 他の人のスマホ・PC<br>
-          ❌ GitHub（HTMLファイルだけが置かれる）
-        </div>
-        つまり<strong>自分のブラウザを見られない限り、誰にも見えません。</strong>
-      </div>
-
-      <div class="hq">Q. Power Automateにはどんな情報が送られる？</div>
-      <div class="ha">
-        「登録する」ボタンを押したとき、<strong>自分のOutlookメール宛</strong>に予定の内容（日時・現場名・作業内容など）が送信されます。
-        <div style="margin:10px 0;background:var(--card2);border-radius:8px;padding:12px;font-size:12px;line-height:1.8;color:var(--text2);">
-          送信先：自分のOutlookアドレス（設定タブで入力したもの）<br>
-          送信内容：予定の日時・現場名・作業内容・メモ<br>
-          送信しないもの：パスワード・個人情報・端末情報
-        </div>
-        このメールをPower Automateが受け取って、Outlookカレンダーに自動で予定を登録します。<strong>社外には一切送られません。</strong>
-      </div>
-
-      <div class="hq">Q. GitHubに置くと情報が漏れない？</div>
-      <div class="ha">
-        漏れません。GitHubに置くのは<strong>ツールの本体（HTMLファイル）だけ</strong>で、お客さまや号機のデータは含まれていません。<br><br>
-        例えるなら、<strong>「Excelのファイルをドライブに置く」のではなく、「Excelのアプリ本体だけ置く」</strong>イメージです。データは各自の端末の中にあります。
-      </div>
-
-      <div class="hq">Q. ブラウザを変えたり機種変したらデータは？</div>
-      <div class="ha">
-        <strong>消えます。</strong>データはブラウザに紐づいているため、別のブラウザや端末では引き継がれません。<br>
-        機種変・ブラウザ変更の前に必ず「設定タブ → マスタをエクスポート」でバックアップを取ってください。
-      </div>
-
-      <div class="hq">Q. 会社のセキュリティ規定に引っかかる？</div>
-      <div class="ha">
-        以下の点で一般的な会社のセキュリティ規定に適合しやすい設計になっています：
-        <div style="margin-top:8px;font-size:12px;line-height:2;color:var(--text2);">
-          ✅ 外部サーバーへのデータ送信なし<br>
-          ✅ インストール不要（ブラウザで開くだけ）<br>
-          ✅ 社内Outlookのみ使用（Power Automate経由）<br>
-          ✅ Microsoft 365の機能のみ活用<br>
-          ✅ ソースコードが公開されており中身を確認可能
-        </div>
-        ただし会社によってポリシーが異なるため、心配な場合はIT部門への確認を推奨します。
-      </div>
-
-    </div>
-  </div>
-
-  <div style="text-align:center;padding:16px 0 8px;font-size:11px;color:var(--text3);font-family:var(--mono);">v5.0 — 点検スケジューラ</div>
-</div>
 
 </div>
 

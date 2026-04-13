@@ -1291,6 +1291,7 @@ function init(){
   save(); // デフォルト値を保存
   updateBadge();renderCustSel();renderPartnerSel();renderCatChips();initSort();
   renderSubmitButtons('m');renderSubmitButtons('i');renderSubmitButtons('att');renderSubmitButtons('tv');
+  showScreen('select');
 }
 function save(){localStorage.setItem('sched_v5',JSON.stringify({db,cfg}));}
 function saveSettings(){

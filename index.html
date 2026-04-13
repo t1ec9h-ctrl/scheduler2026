@@ -68,6 +68,10 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 /* Form */
 .fp{padding:16px;}
 .sec{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+.opt-divider{display:flex;align-items:center;gap:10px;margin:16px 0 10px;padding:0 4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.opt-divider span{font-size:11px;color:var(--text3);font-family:var(--mono);white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.opt-divider::before,.opt-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.opt-arr{font-size:11px;transition:transform .2s;display:inline-block;}
 .sh{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .st{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text2);text-transform:uppercase;font-family:var(--mono);}
 .sb{padding:14px 16px;}
@@ -270,6 +274,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
+    <div class="opt-divider" id="m-opt-div" onclick="togOptSecs('m')"><span><span class="opt-arr" id="m-opt-arr">▼</span> オプション</span></div>
     <div class="sec">
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
@@ -483,6 +488,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    <div class="opt-divider" id="i-opt-div" onclick="togOptSecs('i')"><span><span class="opt-arr" id="i-opt-arr">▼</span> オプション</span></div>
     <!-- 移動時間 -->
     <div class="sec" id="i-travel-sec">
       <div class="sh">
@@ -775,6 +781,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <!-- 表示方法 -->
+    <div class="opt-divider" id="att-opt-div" onclick="togOptSecs('att')"><span><span class="opt-arr" id="att-opt-arr">▼</span> オプション</span></div>
     <div class="sec">
       <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
@@ -3309,6 +3316,26 @@ function togOpt(btn){
   const hidden = body.classList.contains('hidden');
   body.classList.toggle('hidden', !hidden);
   if(arr) arr.style.transform = hidden ? '' : 'rotate(-90deg)';
+}
+
+// ===== オプション折りたたみ =====
+const optState = {i: true, m: true, att: true}; // true=展開
+
+function togOptSecs(prefix){
+  optState[prefix] = !optState[prefix];
+  const show = optState[prefix];
+  const arr = document.getElementById(prefix + '-opt-arr');
+  if(arr) arr.style.transform = show ? '' : 'rotate(-90deg)';
+
+  // dividerの次の兄弟要素からsubmit-areaまでの.secを全て表示/非表示
+  const div = document.getElementById(prefix + '-opt-div');
+  if(!div) return;
+  let el = div.nextElementSibling;
+  while(el){
+    if(el.classList.contains('submit-area')) break;
+    if(el.classList.contains('sec')) el.style.display = show ? '' : 'none';
+    el = el.nextElementSibling;
+  }
 }
 
 function togHelp(btn){

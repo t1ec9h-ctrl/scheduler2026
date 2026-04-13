@@ -2981,7 +2981,7 @@ function buildTravel(){
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
-    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:'workingElsewhere',
+    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:'oof',
     units:'', assign:'', work:'', prep:'', memo,
     travelEvents:[], rrule:'', isAllday:false,
     furikaeEvent:null, furikaeEvents:[],
@@ -3170,11 +3170,11 @@ function buildSplitPayloads(base){
       const wStart = `${date}T${start}:00+09:00`;
       const wEnd   = `${date}T${end}:00+09:00`;
       const fromSite = document.getElementById('i-tr-from-site')?.value.trim()||'前現場';
-      if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'busy', fromTo:'go'});
-      if(st.office) travelEvents.push({title:'移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'busy', fromTo:'office'});
-      if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'busy', fromTo:'site'});
-      if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'busy', fromTo:'back'});
-      if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'busy', fromTo:'return'});
+      if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'go'});
+      if(st.office) travelEvents.push({title:'移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'office'});
+      if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'site'});
+      if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'oof', fromTo:'back'});
+      if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'oof', fromTo:'return'});
     }
 
     const memoFull = [

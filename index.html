@@ -1475,15 +1475,24 @@ function renderCustSel(){
     const s=document.getElementById(id);
     if(!s) return;
     const c=s.value;
-    s.innerHTML='<option value="">— 選択 —</option>';
-    db.customers.forEach(cu=>{s.appendChild(new Option(cu.name,cu.id));});
+    if(!db.customers.length){
+      s.innerHTML='<option value="" disabled>（右の＋ボタンまたはマスタ管理から追加）</option>';
+    } else {
+      s.innerHTML='<option value="">— 選択 —</option>';
+      db.customers.forEach(cu=>{s.appendChild(new Option(cu.name,cu.id));});
+    }
     if(c)s.value=c;
   });
 }
 function renderPartnerSel(){
   const s=document.getElementById('i-partner');
-  s.innerHTML='<option value="">— 選択 —</option>';
-  db.partners.forEach(p=>{s.appendChild(new Option(p.name,p.id));});
+  if(!s) return;
+  if(!db.partners.length){
+    s.innerHTML='<option value="" disabled>（マスタ管理から追加できます）</option>';
+  } else {
+    s.innerHTML='<option value="">— 選択 —</option>';
+    db.partners.forEach(p=>{s.appendChild(new Option(p.name,p.id));});
+  }
 }
 function onCustChange(){
   const s=document.getElementById('i-cust');

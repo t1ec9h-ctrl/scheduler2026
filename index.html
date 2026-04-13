@@ -182,8 +182,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 .acc-head:active{background:var(--adim);}
 .acc-icon{font-size:13px;width:20px;text-align:center;flex-shrink:0;opacity:.7;}
 .acc-title{flex:1;font-size:12px;font-weight:600;color:var(--text3);}
-.acc-title::before{content:"＋ ";}
-.acc-body .acc-title::before{content:"";}
 .acc-badge{font-size:11px;color:var(--accent);font-family:var(--mono);}
 .acc-arr{font-size:14px;color:var(--text3);transition:transform .2s;}
 .acc-body{display:none;border-top:1px dashed var(--border2);background:var(--card);}
@@ -267,14 +265,8 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
-    <div class="acc-sec">
-      <button class="acc-head" onclick="togAcc(this)">
-        <span class="acc-icon">🎨</span>
-        <span class="acc-title">色分類</span>
-        <span class="acc-badge">なし</span>
-        <span class="acc-arr">›</span>
-      </button>
-      <div class="acc-body">
+    <div class="sec">
+      <div class="sh"><div class="st">基本情報</div></div>
       <div class="sb">
         <div class="field"><label>件名<span class="req">*</span></label><input type="text" id="m-title" placeholder="例：週次チームMTG" oninput="updateMTitle()"></div>
         <div class="fr">
@@ -286,8 +278,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="field"><label>終了</label><input type="time" id="m-end" value="11:00"></div>
         </div>
       </div>
-    
-      </div>
     </div>
     <div class="acc-sec">
       <button class="acc-head" onclick="togAcc(this)">
@@ -297,9 +287,11 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <span class="acc-arr">›</span>
       </button>
       <div class="acc-body">
-      <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
-    
+
       </div>
+    </div>    <div class="sec">
+      <div class="sh"><div class="st">議題・内容</div></div>
+      <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
     </div>
 
     <div class="acc-sec">
@@ -312,9 +304,25 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="acc-body">
 
       </div>
+    </div>    <div class="sec">
+      <div class="sh">
+        <div class="st">事前準備</div>
+        <div class="tw"><span class="tl" id="m-pl">なし</span><label class="tog"><input type="checkbox" id="m-pt" onchange="togPrep('m')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb pb" id="m-pb">
+        <div class="lrows" id="m-todo-rows"><div class="lr"><input type="text" placeholder="例：資料を事前共有する"><button class="bdel" onclick="delRow(this)">×</button></div></div>
+        <button class="badd" onclick="addRow('m-todo-rows','TODO')">＋ TODOを追加</button>
+        <div style="margin-top:12px">
+          <div class="fr">
+            <div class="field"><label>何日前にリマインド</label><input type="number" id="m-pd" value="1" min="1" max="30" oninput="calcR('m')"></div>
+            <div class="field"><label>通知時刻</label><input type="time" id="m-ptime" value="09:00" oninput="calcR('m')"></div>
+          </div>
+          <div class="rbox" id="m-rbox">📅 日付を入力すると計算します</div>
+        </div>
+      </div>
     </div>
     <!-- 表示方法 -->
-    <div class="acc-sec" id="i-showas-sec">
+    <div class="acc-sec">
       <button class="acc-head" onclick="togAcc(this)">
         <span class="acc-icon">📅</span>
         <span class="acc-title">表示方法</span>
@@ -322,6 +330,10 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <span class="acc-arr">›</span>
       </button>
       <div class="acc-body">
+
+      </div>
+    </div>    <div class="sec">
+      <div class="sh"><div class="st">📅 Outlook 表示方法</div></div>
       <div class="sb" style="padding:12px 16px;">
         <div class="cg" id="m-showas-chips">
           <div class="chip" id="m-sa-free" onclick="selShowAs('m','free')">🔲 空き時間</div>
@@ -331,11 +343,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <div class="chip" id="m-sa-workingElsewhere" onclick="selShowAs('m','workingElsewhere')">他の場所で作業</div>
         </div>
       </div>
-    
-      </div>
     </div>
     <!-- 色分類 -->
-    <div class="acc-sec" id="i-cat-sec">
+    <div class="acc-sec">
       <button class="acc-head" onclick="togAcc(this)">
         <span class="acc-icon">🎨</span>
         <span class="acc-title">色分類</span>
@@ -343,6 +353,10 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <span class="acc-arr">›</span>
       </button>
       <div class="acc-body">
+
+      </div>
+    </div>    <div class="sec">
+      <div class="sh"><div class="st">🎨 Outlook 色分類</div></div>
       <div class="sb">
         <div class="field" style="margin-bottom:0;">
           <div class="cat-chips" id="m-cat-chips">
@@ -350,11 +364,11 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           </div>
         </div>
       </div>
-    
-      </div>
     </div>
     <div class="submit-area" id="m-submit-area"></div>
   </div>
+
+
 
   <!-- INSPECTION FORM -->
   <div class="screen fp" id="screen-inspection">

@@ -1943,6 +1943,7 @@ function doSplitICS(payloads){
     if(p.location) ev+=`LOCATION:${escICS(p.location)}\r\n`;
     if(p.memo)     ev+=`DESCRIPTION:${escICS(p.memo)}\r\n`;
     if(p.rrule)    ev+=`RRULE:${p.rrule}\r\n`;
+    if(p.category) ev+=`CATEGORIES:${escICS(p.category)}\r\n`;
     ev+=`X-MICROSOFT-CDO-BUSYSTATUS:${cdoStatus}\r\nTRANSP:${freeOrBusy(p.showAs)}\r\nEND:VEVENT\r\n`;
     return ev;
   }
@@ -1954,7 +1955,7 @@ function doSplitICS(payloads){
     // 移動予定
     if(p.travelEvents&&p.travelEvents.length){
       p.travelEvents.forEach(te=>{
-        ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(te.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(te.end)}\r\nSUMMARY:${escICS(te.title)}\r\nDESCRIPTION:${escICS(te.memo||'')}\r\nX-MICROSOFT-CDO-BUSYSTATUS:OOF\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
+        ics+=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(te.start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(te.end)}\r\nSUMMARY:${escICS(te.title)}\r\nDESCRIPTION:${escICS(te.memo||'')}\r\nCATEGORIES:${escICS(db.categories.find(c=>c.name==='外出')?.name||'')}\r\nX-MICROSOFT-CDO-BUSYSTATUS:OOF\r\nTRANSP:OPAQUE\r\nEND:VEVENT\r\n`;
       });
     }
     // 振替休日
@@ -1998,11 +1999,12 @@ function doICS(){
   const p=pending;
   const pZ2=n=>String(n).padStart(2,'0');
   const freeOrBusy=sa=>(sa==='free'?'FREE':sa==='tentative'?'TENTATIVE':sa==='oof'?'OOF':'BUSY');
-  function makeEvent(title, start, end, desc, loc, showAs, rrule){
+  function makeEvent(title, start, end, desc, loc, showAs, rrule, category){
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(end)}\r\nSUMMARY:${escICS(title)}\r\n`;
     if(loc) ev+=`LOCATION:${escICS(loc)}\r\n`;
     if(desc) ev+=`DESCRIPTION:${escICS(desc)}\r\n`;
     ev+=`X-MICROSOFT-CDO-BUSYSTATUS:${freeOrBusy(showAs)}\r\n`;
+    if(category) ev+=`CATEGORIES:${escICS(category)}\r\n`;
     if(showAs) ev+=`TRANSP:${showAs==='free'||showAs==='tentative'?'TRANSPARENT':'OPAQUE'}\r\n`;
     if(rrule) ev+=`RRULE:${rrule}\r\n`;
     ev+=`BEGIN:VALARM\r\nTRIGGER:-PT30M\r\nACTION:DISPLAY\r\nDESCRIPTION:${escICS(title)}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
@@ -2023,16 +2025,16 @@ function doICS(){
     ev+=`TRANSP:${transp}\r\nEND:VEVENT\r\n`;
     ics+=ev;
   } else {
-    ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'');
+    ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'', p.category||'');
   }
   if(p.prep){
     const prepEnd=p.prep.replace(/T(\d{2}):(\d{2})/,(m,h,min)=>`T${h}:${String(parseInt(min)+30).padStart(2,'0')}`);
-    ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', '', '');
+    ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', '', '', p.category||'');
   }
   // travel events
   if(p.travelEvents&&p.travelEvents.length){
     p.travelEvents.forEach(te=>{
-      ics+=makeEvent(te.title, te.start, te.end, te.memo||'', '', 'free', '');
+      ics+=makeEvent(te.title, te.start, te.end, te.memo||'', '', 'oof', '', (db.categories.find(c=>c.name==='外出')?.name||''));
     });
   }
   // 振替休日（複数対応）

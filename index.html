@@ -346,6 +346,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
   <!-- INSPECTION FORM -->
   <div class="screen fp" id="screen-inspection">
     <div class="sec">
+      <div class="sh"><div class="st">現場・号機</div></div>
+      <div class="sb">
+        <div class="field">
+          <label>お客さま<span class="req">*</span></label>
+          <div class="cr2">
+            <select id="i-cust" onchange="onCustChange()" oninput="onCustChange()"><option value="">— 選択 —</option></select>
+            <button class="birr" onclick="openQuickAddCust()" title="新規物件を登録">＋</button>
+            <button class="birr" onclick="openIrr()">✏️</button>
+          </div>
+        </div>
+        <div class="field"><label>号機（複数選択可）<span class="req">*</span></label><div class="ug" id="i-ug"><span style="font-size:12px;color:var(--text3)">お客さまを選択してください</span></div></div>
+      </div>
+    </div>
+    <div class="sec">
       <div class="sh"><div class="st">点検種別・担当</div></div>
       <div class="sb">
         <div class="field">
@@ -667,8 +681,6 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
 
     <div class="submit-area" id="i-submit-area"></div>
-  </div>
-
   </div>
 
   <!-- TRAVEL FORM -->

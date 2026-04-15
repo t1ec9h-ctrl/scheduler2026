@@ -22,6 +22,19 @@
   --mono:'Share Tech Mono',monospace;
   --nav-h:64px;--sbi:env(safe-area-inset-bottom,0px);
 }
+/* ライトモード */
+body.light{
+  --bg:#f0f4f8;--surface:#ffffff;--card:#ffffff;--card2:#f5f7fa;
+  --border:#dde3ec;--border2:#c8d0de;
+  --accent:#0066cc;--adim:rgba(0,102,204,.1);
+  --green:#00875a;--gdim:rgba(0,135,90,.1);
+  --orange:#c45c00;--odim:rgba(196,92,0,.1);
+  --red:#cc0033;--rdim:rgba(204,0,51,.1);
+  --yellow:#996600;--ydim:rgba(153,102,0,.1);
+  --purple:#6644aa;--pdim:rgba(102,68,170,.1);
+  --text:#111827;--text2:#374151;--text3:#9ca3af;
+}
+
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
@@ -833,6 +846,16 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 
   <!-- SETTINGS -->
   <div class="screen sts" id="screen-settings">
+    <div class="stcard">
+      <div class="sh"><div class="st">🎨 テーマ</div></div>
+      <div class="stbody">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+          <span style="font-size:14px;color:var(--text2);" id="theme-label">ダークモード</span>
+          <label class="tog"><input type="checkbox" id="cfg-light" onchange="toggleTheme()"><div class="tt"></div><div class="tth"></div></label>
+        </div>
+      </div>
+    </div>
+
     <div class="stcard">
       <div class="sh"><div class="st">📨 登録方法の設定</div></div>
       <div class="stbody">

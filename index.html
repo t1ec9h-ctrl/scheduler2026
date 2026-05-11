@@ -334,6 +334,19 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         </div>
       </div>
     </div>
+    <!-- 表示方法 -->
+    <div class="sec">
+      <div class="sh"><div class="st">📅 表示方法</div></div>
+      <div class="sb" style="padding:12px 16px;">
+        <div class="cg" id="tv-showas-chips">
+          <div class="chip cb" id="tv-sa-oof"             onclick="selShowAs('tv','oof')">外出中</div>
+          <div class="chip"    id="tv-sa-busy"            onclick="selShowAs('tv','busy')">🔳 予定あり</div>
+          <div class="chip"    id="tv-sa-free"            onclick="selShowAs('tv','free')">🔲 空き時間</div>
+          <div class="chip"    id="tv-sa-workingElsewhere" onclick="selShowAs('tv','workingElsewhere')">他の場所で作業</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 件名プレビュー -->
     <div class="sec">
       <div class="sh"><div class="st">登録内容</div></div>
@@ -1344,7 +1357,8 @@ function goForm(fid,sub){
   if(fid==='travel'){
     const _n=new Date(); const today=new Date(_n.getTime()+9*3600000).toISOString().split('T')[0];
     document.getElementById('tv-date').value=today;
-    tvState={pattern:'go',custName:'',custId:''};
+    tvState={pattern:'go',custName:'',custId:'',showAs:'oof'};
+    selShowAs('tv','oof',true);
     document.querySelectorAll('#tv-pattern-chips .chip').forEach((c,i)=>c.className='chip'+(i===0?' cb':''));
     document.getElementById('tv-from-field').style.display='none';
     document.getElementById('tv-from-site').value='';
@@ -2481,6 +2495,7 @@ let showAsIManual = false; // ユーザーが手動で変更したか
 function selShowAs(prefix, val, auto){
   if(prefix==='i'){ showAsI=val; if(!auto) showAsIManual=true; }
   else if(prefix==='att') showAsAtt=val;
+  else if(prefix==='tv'){ tvState.showAs=val; }
   else showAsM=val;
   ['free','busy','tentative','oof','workingElsewhere'].forEach(v=>{
     const el=document.getElementById(prefix+'-sa-'+v);
@@ -2798,7 +2813,7 @@ function saveEditUnit(){
 }
 
 // ===== Travel Form =====
-let tvState = {pattern:'go', custName:'', custId:''};
+let tvState = {pattern:'go', custName:'', custId:'', showAs:'oof'};
 
 const TV_TITLES = {
   go:     {title:'直行',      memo:(c,company)=>`自宅 → ${c}`},
@@ -2885,7 +2900,7 @@ function buildTravel(){
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
-    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:'oof',
+    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:(tvState.showAs||'oof'),
     units:'', assign:'', work:'', prep:'', memo,
     travelEvents:[], rrule:'', isAllday:false,
     furikaeEvent:null, furikaeEvents:[],

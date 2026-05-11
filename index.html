@@ -573,6 +573,16 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
             </div>
           </div>
         </div>
+        <!-- 移動予定の表示方法 -->
+        <div class="field" style="margin-top:8px;">
+          <label>移動予定の表示方法</label>
+          <div class="cg" id="i-travel-showas-chips">
+            <div class="chip cb" id="i-tr-sa-oof"              onclick="selITravelShowAs('oof')">外出中</div>
+            <div class="chip"    id="i-tr-sa-busy"             onclick="selITravelShowAs('busy')">🔳 予定あり</div>
+            <div class="chip"    id="i-tr-sa-free"             onclick="selITravelShowAs('free')">🔲 空き時間</div>
+            <div class="chip"    id="i-tr-sa-workingElsewhere" onclick="selITravelShowAs('workingElsewhere')">他の場所で作業</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1371,7 +1381,9 @@ function goForm(fid,sub){
     // 振替休日リセット
     furikaeDates=[];
     renderFurikaeDates();
-    showAsIManual=false; // 手動フラグリセット
+    showAsIManual=false;
+    iTravelShowAs='oof';
+    selITravelShowAs('oof'); // 手動フラグリセット
     const ov=document.getElementById('i-overnight');
     if(ov) ov.checked=false;
     splitMode=false;
@@ -2814,6 +2826,7 @@ function saveEditUnit(){
 
 // ===== Travel Form =====
 let tvState = {pattern:'go', custName:'', custId:'', showAs:'oof'};
+let iTravelShowAs = 'oof';
 
 const TV_TITLES = {
   go:     {title:'直行',      memo:(c,company)=>`自宅 → ${c}`},
@@ -3089,11 +3102,11 @@ function buildSplitPayloads(base){
       const wStart = `${date}T${start}:00+09:00`;
       const wEnd   = `${date}T${end}:00+09:00`;
       const fromSite = document.getElementById('i-tr-from-site')?.value.trim()||'前現場';
-      if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'go'});
-      if(st.office) travelEvents.push({title:'移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'office'});
-      if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:'oof', fromTo:'site'});
-      if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'oof', fromTo:'back'});
-      if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:'oof', fromTo:'return'});
+      if(st.go)     travelEvents.push({title:'直行',      memo:`自宅 → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:iTravelShowAs, fromTo:'go'});
+      if(st.office) travelEvents.push({title:'移動', memo:`${company} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:iTravelShowAs, fromTo:'office'});
+      if(st.site)   travelEvents.push({title:'現場移動',  memo:`${fromSite} → ${iS.custName}`, start:addMinsLocal(date,start,-travelMin), end:wStart, showAs:iTravelShowAs, fromTo:'site'});
+      if(st.back)   travelEvents.push({title:'直帰',      memo:`${iS.custName} → 自宅`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:iTravelShowAs, fromTo:'back'});
+      if(st.return) travelEvents.push({title:'帰社',      memo:`${iS.custName} → ${company}`, start:wEnd, end:addMinsLocal(date,end,travelMin), showAs:iTravelShowAs, fromTo:'return'});
     }
 
     const memoFull = [
@@ -3267,6 +3280,14 @@ function saveQuickCust(){
 }
 
 // ===== アコーディオンセクション =====
+function selITravelShowAs(val){
+  iTravelShowAs = val;
+  ['oof','busy','free','workingElsewhere'].forEach(v=>{
+    const el = document.getElementById('i-tr-sa-'+v);
+    if(el) el.classList.toggle('cb', v===val);
+  });
+}
+
 function togAcc(btn){
   const body = btn.nextElementSibling;
   const arr  = btn.querySelector('.acc-arr');

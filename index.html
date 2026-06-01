@@ -494,6 +494,13 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <input type="date" id="i-rec-end" oninput="updateRecPreview()">
         </div>
         <div class="rbox" id="i-rec-preview" style="margin-top:0;">繰り返し終了日を入力してください</div>
+        <div class="field" style="margin-top:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <label style="margin-bottom:0;">移動予定を毎日登録する</label>
+            <label class="tog"><input type="checkbox" id="i-rec-daily-travel"><div class="tt"></div><div class="tth"></div></label>
+          </div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:4px;">ONにすると全日程に直行・直帰などが付きます</div>
+        </div>
       </div>
     </div>
 
@@ -1374,6 +1381,7 @@ function goForm(fid,sub){
     furikaeDates=[];
     renderFurikaeDates();
     showAsIManual=false;
+    const dtt=document.getElementById('i-rec-daily-travel');if(dtt)dtt.checked=false;
     const ov=document.getElementById('i-overnight');
     if(ov) ov.checked=false;
     splitMode=false;
@@ -1796,22 +1804,23 @@ function doMailto(){
   // 繰り返しがある場合は展開してevents配列で送る
   if(p.rrule){
     const occurrences = expandRrule(p.start, p.end, p.rrule);
+    const dailyTravel = document.getElementById('i-rec-daily-travel')?.checked || false;
     const events = occurrences.map((occ,i)=>({
       ...p,
       start: stripTZlocal(occ.start),
       end:   stripTZlocal(occ.end),
       rrule: '', // 展開済みなのでrruleは不要
-      // 移動予定は初日のみ
-      travelGoStart:     i===0 ? stripTZ(p.travelGoStart)     : '',
-      travelGoEnd:       i===0 ? stripTZ(p.travelGoEnd)       : '',
-      travelGoMemo:      i===0 ? p.travelGoMemo               : '',
-      travelBackStart:   i===occurrences.length-1 ? stripTZ(p.travelBackStart)   : '',
-      travelBackEnd:     i===occurrences.length-1 ? stripTZ(p.travelBackEnd)     : '',
-      travelBackMemo:    i===occurrences.length-1 ? p.travelBackMemo             : '',
-      travelOfficeStart: i===0 ? stripTZ(p.travelOfficeStart) : '',
-      travelOfficeEnd:   i===0 ? stripTZ(p.travelOfficeEnd)   : '',
-      travelReturnStart: i===occurrences.length-1 ? stripTZ(p.travelReturnStart) : '',
-      travelReturnEnd:   i===occurrences.length-1 ? stripTZ(p.travelReturnEnd)   : '',
+      // 移動予定：毎日トグルON→全日程、OFF→初日/最終日のみ
+      travelGoStart:     (dailyTravel || i===0) ? stripTZ(p.travelGoStart)     : '',
+      travelGoEnd:       (dailyTravel || i===0) ? stripTZ(p.travelGoEnd)       : '',
+      travelGoMemo:      (dailyTravel || i===0) ? p.travelGoMemo               : '',
+      travelBackStart:   (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelBackStart)   : '',
+      travelBackEnd:     (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelBackEnd)     : '',
+      travelBackMemo:    (dailyTravel || i===occurrences.length-1) ? p.travelBackMemo             : '',
+      travelOfficeStart: (dailyTravel || i===0) ? stripTZ(p.travelOfficeStart) : '',
+      travelOfficeEnd:   (dailyTravel || i===0) ? stripTZ(p.travelOfficeEnd)   : '',
+      travelReturnStart: (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelReturnStart) : '',
+      travelReturnEnd:   (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelReturnEnd)   : '',
       travelSiteStart:   stripTZ(p.travelSiteStart),
       travelSiteEnd:     stripTZ(p.travelSiteEnd),
       prep: i===0 ? stripTZ(p.prep) : '', // 事前準備は初日のみ

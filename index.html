@@ -1810,22 +1810,29 @@ function doMailto(){
   if(p.rrule){
     const occurrences = expandRrule(p.start, p.end, p.rrule);
     const dailyTravel = document.getElementById('i-rec-daily-travel')?.checked || false;
+    // 移動予定の時刻を各日付に合わせて置換する関数
+    const redate = (dt, occDT) => {
+      if(!dt) return '';
+      const time = stripTZ(dt).slice(11); // "HH:MM:SS" 部分
+      const date = stripTZlocal(occDT).slice(0,10); // "YYYY-MM-DD" 部分
+      return date + 'T' + time;
+    };
     const events = occurrences.map((occ,i)=>({
       ...p,
       start: stripTZlocal(occ.start),
       end:   stripTZlocal(occ.end),
       rrule: '', // 展開済みなのでrruleは不要
-      // 移動予定：毎日トグルON→全日程、OFF→初日/最終日のみ
-      travelGoStart:     (dailyTravel || i===0) ? stripTZ(p.travelGoStart)     : '',
-      travelGoEnd:       (dailyTravel || i===0) ? stripTZ(p.travelGoEnd)       : '',
+      // 移動予定：毎日トグルON→全日程、OFF→初日/最終日のみ（日付は各日に合わせる）
+      travelGoStart:     (dailyTravel || i===0) ? redate(p.travelGoStart, occ.start)     : '',
+      travelGoEnd:       (dailyTravel || i===0) ? redate(p.travelGoEnd, occ.start)       : '',
       travelGoMemo:      (dailyTravel || i===0) ? p.travelGoMemo               : '',
-      travelBackStart:   (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelBackStart)   : '',
-      travelBackEnd:     (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelBackEnd)     : '',
+      travelBackStart:   (dailyTravel || i===occurrences.length-1) ? redate(p.travelBackStart, occ.end)   : '',
+      travelBackEnd:     (dailyTravel || i===occurrences.length-1) ? redate(p.travelBackEnd, occ.end)     : '',
       travelBackMemo:    (dailyTravel || i===occurrences.length-1) ? p.travelBackMemo             : '',
-      travelOfficeStart: (dailyTravel || i===0) ? stripTZ(p.travelOfficeStart) : '',
-      travelOfficeEnd:   (dailyTravel || i===0) ? stripTZ(p.travelOfficeEnd)   : '',
-      travelReturnStart: (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelReturnStart) : '',
-      travelReturnEnd:   (dailyTravel || i===occurrences.length-1) ? stripTZ(p.travelReturnEnd)   : '',
+      travelOfficeStart: (dailyTravel || i===0) ? redate(p.travelOfficeStart, occ.start) : '',
+      travelOfficeEnd:   (dailyTravel || i===0) ? redate(p.travelOfficeEnd, occ.start)   : '',
+      travelReturnStart: (dailyTravel || i===occurrences.length-1) ? redate(p.travelReturnStart, occ.end) : '',
+      travelReturnEnd:   (dailyTravel || i===occurrences.length-1) ? redate(p.travelReturnEnd, occ.end)   : '',
       travelSiteStart:   stripTZ(p.travelSiteStart),
       travelSiteEnd:     stripTZ(p.travelSiteEnd),
       prep: i===0 ? stripTZ(p.prep) : '', // 事前準備は初日のみ

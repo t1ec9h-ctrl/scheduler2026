@@ -44,6 +44,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text
 .hdr-back.vis{display:flex;}
 .hdr-back:active{background:var(--adim);}
 .hdr-title{font-size:15px;font-weight:700;flex:1;}
+.hdr-clear{background:var(--rdim);color:var(--red);border:1px solid var(--red);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-left:auto;margin-right:8px;font-family:inherit;}
+.hdr-clear:active{opacity:.7;}
 .hdr-badge{font-size:10px;color:var(--text3);font-family:var(--mono);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + var(--sbi) + 8px);}
 .bnav{position:fixed;bottom:0;left:0;right:0;height:calc(var(--nav-h) + var(--sbi));padding-bottom:var(--sbi);background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:50;}
@@ -235,6 +237,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 <div class="hdr">
   <button class="hdr-back" id="btn-back" onclick="goBack()">‹</button>
   <div class="hdr-title" id="hdr-title">⚡ スケジューラ</div>
+  <button class="hdr-clear" id="btn-clear" onclick="clearForm()" style="display:none;">🗑 クリア</button>
   <div class="hdr-badge" id="hdr-badge"></div>
 </div>
 
@@ -278,7 +281,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="field"><label>件名<span class="req">*</span></label><input type="text" id="m-title" placeholder="例：週次チームMTG" oninput="updateMTitle()"></div>
         <div class="fr">
-          <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="m-date" oninput="calcR('m')"></div>
+          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="m-date" oninput="calcR('m')"></div>
           <div class="field"><label>場所 / URL</label><input type="text" id="m-loc" placeholder="会議室A"></div>
         </div>
         <div class="fr">
@@ -403,7 +406,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
       <div class="sb">
         <div class="fr">
-          <div class="field"><label>作業日<span class="req">*</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
+          <div class="field"><label>作業日<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
           <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;">
             <div class="tw" style="height:44px;">
               <span style="font-size:13px;color:var(--text2);">🌙 日またぎ</span>
@@ -692,7 +695,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="sec">
       <div class="sh"><div class="st">日時</div></div>
       <div class="sb">
-        <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="tv-date" oninput="updateTvPreview()"></div>
+        <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="tv-date" oninput="updateTvPreview()"></div>
         <div class="fr">
           <div class="field"><label>開始</label><input type="time" id="tv-start" value="08:00" oninput="calcTvEnd()"></div>
           <div class="field"><label>終了</label><input type="time" id="tv-end" value="09:00" oninput="updateTvPreview()"></div>
@@ -756,7 +759,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sh"><div class="st">日時</div></div>
       <div class="sb">
         <div class="field-row fr">
-          <div class="field"><label>日付<span class="req">*</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
+          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
           <div class="field" id="att-end-date-field" style="display:none;">
             <label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休・連続勤務時</span></label>
             <input type="date" id="att-end-date" oninput="updateAttPreview()">
@@ -1452,6 +1455,8 @@ function showScreen(id){
   document.getElementById('screen-'+id).classList.add('active');
   document.getElementById('hdr-title').textContent=TITLES[id]||id;
   document.getElementById('btn-back').classList.toggle('vis',id!=='select'&&id!=='master'&&id!=='settings'&&id!=='help');
+  const clearBtn=document.getElementById('btn-clear');
+  if(clearBtn) clearBtn.style.display=['meeting','inspection','attendance','travel'].includes(id)?'':'none';
   document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
   const nid=NAVMAP[id];if(nid)document.getElementById(nid).classList.add('active');
   document.getElementById('app-body').scrollTop=0;
@@ -3416,6 +3421,17 @@ function togOptSecs(prefix){
     if(el.classList.contains('sec')) el.style.display = show ? '' : 'none';
     el = el.nextElementSibling;
   }
+}
+
+function clearForm(){
+  const screen = document.querySelector('.screen.active');
+  if(!screen) return;
+  const id = screen.id.replace('screen-','');
+  const formMap = {meeting:'meeting', inspection:'inspection', attendance:'attendance', travel:'travel'};
+  if(!formMap[id]) return;
+  if(!confirm('入力内容をすべてクリアしますか？')) return;
+  goForm(id);
+  toast('🗑 クリアしました');
 }
 
 function togHelp(btn){

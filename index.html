@@ -1971,7 +1971,7 @@ function doICS(){
   }
   if(p.prep){
     const prepEnd=p.prep.replace(/T(\d{2}):(\d{2})/,(m,h,min)=>`T${h}:${String(parseInt(min)+30).padStart(2,'0')}`);
-    ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', '', '', p.category||'');
+    ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', 'free', '', '');
   }
   // travel events
   if(p.travelEvents&&p.travelEvents.length){

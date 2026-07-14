@@ -741,8 +741,9 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="cg" id="att-type-chips">
           <div class="chip cb"  onclick="selAttType(this,'有休','allday')">🌴 有休</div>
-          <div class="chip"     onclick="selAttType(this,'午前半休','half')">🌅 午前半休</div>
-          <div class="chip"     onclick="selAttType(this,'午後半休','half')">🌇 午後半休</div>
+          <div class="chip"     onclick="selAttType(this,'AM半休','half')">🌅 AM半休</div>
+          <div class="chip"     onclick="selAttType(this,'PM半休','half')">🌇 PM半休</div>
+          <div class="chip"     onclick="selAttType(this,'フレックス','work')">⏰ フレックス</div>
           <div class="chip"     onclick="selAttType(this,'振替休日','allday')">🔄 振替休日</div>
           <div class="chip"     onclick="selAttType(this,'社内勤務','work')">🏢 社内勤務</div>
           <div class="chip"     onclick="selAttType(this,'休日出勤','work')">💼 休日出勤</div>
@@ -2165,10 +2166,11 @@ let showAsAtt = 'busy';
 
 const ATT_DEFAULTS = {
   '有休':     {mode:'allday', start:'09:00', end:'18:00', showAs:'busy'},
-  '午前半休': {mode:'half',   start:'09:00', end:'13:00', showAs:'busy'},
-  '午後半休': {mode:'half',   start:'13:00', end:'18:00', showAs:'busy'},
+  'AM半休': {mode:'half',   start:'09:00', end:'13:00', showAs:'busy'},
+  'PM半休': {mode:'half',   start:'13:00', end:'18:00', showAs:'busy'},
   '振替休日': {mode:'allday', start:'09:00', end:'18:00', showAs:'busy'},
-  '社内勤務': {mode:'work',   start:'09:00', end:'18:00', showAs:'busy'},
+  '社内勤務': {mode:'work',   start:'09:00', end:'18:00', showAs:'free'},
+  'フレックス': {mode:'work',  start:'10:00', end:'16:00', showAs:'free'},
   '休日出勤': {mode:'work',   start:'09:00', end:'18:00', showAs:'busy'},
   'その他':   {mode:'work',   start:'09:00', end:'18:00', showAs:'busy'},
 };
@@ -2683,14 +2685,14 @@ function delCategory(id){
 let sortOrders = {
   top:  ['inspection','meeting','attendance','travel'],
   insp: ['定期点検','都度点検','トラブル','その他'],
-  att:  ['有休','午前半休','午後半休','振替休日','社内勤務','休日出勤'],
+  att:  ['有休','AM半休','PM半休','フレックス','振替休日','社内勤務','休日出勤'],
   nav:  ['home','meeting','inspection','master','settings','help'],
 };
 
 const SORT_LABELS = {
   top:  {inspection:'⚡ 発電機メンテ', meeting:'📅 会議・その他', attendance:'🗓 勤怠・休暇', travel:'🚗 移動予定'},
   insp: {'定期点検':'🔵 定期点検','都度点検':'🟢 都度点検','トラブル':'🔴 トラブル','その他':'🟣 その他'},
-  att:  {'有休':'🌴 有休','午前半休':'🌅 午前半休','午後半休':'🌇 午後半休','振替休日':'🔄 振替休日','社内勤務':'🏢 社内勤務','休日出勤':'💼 休日出勤'},
+  att:  {'有休':'🌴 有休','AM半休':'🌅 AM半休','PM半休':'🌇 PM半休','フレックス':'⏰ フレックス','振替休日':'🔄 振替休日','社内勤務':'🏢 社内勤務','休日出勤':'💼 休日出勤'},
   nav:  {home:'🏠 ホーム', meeting:'👥 会議', inspection:'⚡ 点検', master:'⚙️ マスタ', settings:'📧 設定', help:'❓ ヘルプ'},
 };
 
@@ -3226,8 +3228,8 @@ const AUTO_CAT_MAP = {
   '社内会議': '会議', '個人タスク': '会議', 'その他_meeting': '会議',
   '社外打合せ': '外出',
   // 勤怠フォーム
-  '有休': '休暇', '午前半休': '休暇', '午後半休': '休暇', '振替休日': '休暇',
-  '社内勤務': '勤務', '休日出勤': '勤務',
+  '有休': '休暇', 'AM半休': '休暇', 'PM半休': '休暇', '振替休日': '休暇',
+  '社内勤務': '勤務', '休日出勤': '勤務', 'フレックス': '勤務',
   // 移動フォーム
   'travel': '外出',
 };

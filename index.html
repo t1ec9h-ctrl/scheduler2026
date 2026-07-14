@@ -281,11 +281,11 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb">
         <div class="field"><label>件名<span class="req">*</span></label><input type="text" id="m-title" placeholder="例：週次チームMTG" oninput="updateMTitle()"></div>
         <div class="fr">
-          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="m-date" oninput="calcR('m')"></div>
+          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="m-date" oninput="calcR('m');checkPastDate('m')"><div id="m-date-past-warn" style="display:none;font-size:11px;color:var(--orange);font-family:var(--mono);margin-top:4px;">⚠️ 過去の日付です</div></div>
           <div class="field"><label>場所 / URL</label><input type="text" id="m-loc" placeholder="会議室A"></div>
         </div>
         <div class="fr">
-          <div class="field"><label>開始</label><input type="time" id="m-start" value="10:00"></div>
+          <div class="field"><label>開始</label><input type="time" id="m-start" value="10:00" onchange="autoEndTime('m')"></div>
           <div class="field"><label>終了</label><input type="time" id="m-end" value="11:00"></div>
         </div>
       </div>
@@ -406,7 +406,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
       <div class="sb">
         <div class="fr">
-          <div class="field"><label>作業日<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="i-date" oninput="calcR('i')"></div>
+          <div class="field"><label>作業日<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="i-date" oninput="calcR('i');checkPastDate('i')"><div id="i-date-past-warn" style="display:none;font-size:11px;color:var(--orange);font-family:var(--mono);margin-top:4px;">⚠️ 過去の日付です</div></div>
           <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;">
             <div class="tw" style="height:44px;">
               <span style="font-size:13px;color:var(--text2);">🌙 日またぎ</span>
@@ -417,7 +417,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <!-- 通常モード -->
         <div id="i-normal-time">
           <div class="fr">
-            <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00"></div>
+            <div class="field"><label>開始</label><input type="time" id="i-start" value="09:00" onchange="autoEndTime('i')"></div>
             <div class="field"><label>終了</label><input type="time" id="i-end" value="17:00"></div>
           </div>
         </div>
@@ -695,7 +695,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     <div class="sec">
       <div class="sh"><div class="st">日時</div></div>
       <div class="sb">
-        <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="tv-date" oninput="updateTvPreview()"></div>
+        <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="tv-date" oninput="updateTvPreview();checkPastDate('tv')"><div id="tv-date-past-warn" style="display:none;font-size:11px;color:var(--orange);font-family:var(--mono);margin-top:4px;">⚠️ 過去の日付です</div></div>
         <div class="fr">
           <div class="field"><label>開始</label><input type="time" id="tv-start" value="08:00" oninput="calcTvEnd()"></div>
           <div class="field"><label>終了</label><input type="time" id="tv-end" value="09:00" oninput="updateTvPreview()"></div>
@@ -760,7 +760,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sh"><div class="st">日時</div></div>
       <div class="sb">
         <div class="field-row fr">
-          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="att-date" oninput="updateAttPreview()"></div>
+          <div class="field"><label>日付<span class="req">*</span><span style="font-size:10px;color:var(--accent);font-family:var(--mono);margin-left:4px;">📅タップで選択</span></label><input type="date" id="att-date" oninput="updateAttPreview();checkPastDate('att')"><div id="att-date-past-warn" style="display:none;font-size:11px;color:var(--orange);font-family:var(--mono);margin-top:4px;">⚠️ 過去の日付です</div></div>
           <div class="field" id="att-end-date-field" style="display:none;">
             <label>終了日<span style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-left:4px;">連休・連続勤務時</span></label>
             <input type="date" id="att-end-date" oninput="updateAttPreview()">
@@ -2009,7 +2009,7 @@ function addUnit(){/* replaced by openAddUnits modal */}
 function delUnit(id){db.units=db.units.filter(u=>u.id!==id);save();renderMaster();}
 function addPartner(){const n=document.getElementById('add-pt').value.trim();if(!n)return;db.partners.push({id:'p'+Date.now(),name:n});document.getElementById('add-pt').value='';save();renderMaster();toast('✅ 追加しました');}
 function delPartner(id){db.partners=db.partners.filter(p=>p.id!==id);save();renderMaster();}
-function exportData(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='scheduler_master.json';a.click();toast('✅ エクスポートしました');}
+function exportData(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='scheduler_master.json';a.click();localStorage.setItem('lastExport',String(Date.now()));toast('✅ エクスポートしました');}
 function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{db=JSON.parse(ev.target.result);save();renderMaster();toast('✅ インポートしました');}catch{toast('⚠️ ファイルが不正です');}};r.readAsText(f);}
 
 // ===== Accordion Master =====
@@ -3434,6 +3434,26 @@ function clearForm(){
   if(!confirm('入力内容をすべてクリアしますか？')) return;
   goForm(id);
   toast('🗑 クリアしました');
+}
+
+function checkPastDate(prefix){
+  const dateEl = document.getElementById(prefix+'-date');
+  const warnEl = document.getElementById(prefix+'-date-past-warn');
+  if(!dateEl || !warnEl) return;
+  const val = dateEl.value;
+  if(!val){ warnEl.style.display='none'; return; }
+  const _n = new Date();
+  const today = new Date(_n.getTime()+9*3600000).toISOString().split('T')[0];
+  warnEl.style.display = val < today ? '' : 'none';
+}
+
+function autoEndTime(prefix){
+  const startEl = document.getElementById(prefix+'-start');
+  const endEl   = document.getElementById(prefix+'-end');
+  if(!startEl || !endEl || !startEl.value) return;
+  const [h, m] = startEl.value.split(':').map(Number);
+  const endH = (h + 1) % 24;
+  endEl.value = String(endH).padStart(2,'0') + ':' + String(m).padStart(2,'0');
 }
 
 function togHelp(btn){

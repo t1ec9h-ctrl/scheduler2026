@@ -2540,7 +2540,7 @@ function selShowAs(prefix, val, auto){
 function autoShowAs(prefix, assignAbbr){
   // 手動で変更済みの場合は上書きしない
   if(prefix==='i' && showAsIManual) return;
-  const auto = assignAbbr==='委' ? 'free' : 'busy';
+  const auto = assignAbbr==='委' ? 'free' : 'oof';
   selShowAs(prefix, auto, true); // auto=true で手動フラグを立てない
 }
 
@@ -3035,7 +3035,7 @@ function selSplitAssign(slot, el, c, abbr, type){
   el.classList.add(c);
   // 手動でshowAsが変更されていない場合のみ自動設定
   const manual = splitAssign[slot]?.showAsManual || false;
-  const autoShowAs = abbr==='委' ? 'free' : 'busy';
+  const autoShowAs = abbr==='委' ? 'free' : 'oof';
   splitAssign[slot] = {abbr, type, showAs: manual ? splitAssign[slot].showAs : autoShowAs, showAsManual: manual};
   if(!manual) selSplitShowAs(slot, autoShowAs);
   updateSplitTravelSection();
@@ -3432,6 +3432,11 @@ function clearForm(){
   const formMap = {meeting:'meeting', inspection:'inspection', attendance:'attendance', travel:'travel'};
   if(!formMap[id]) return;
   if(!confirm('入力内容をすべてクリアしますか？')) return;
+  // 全input/textarea/selectをクリア
+  screen.querySelectorAll('input[type="text"],input[type="date"],input[type="time"],input[type="number"],textarea').forEach(el=>{el.value='';});
+  screen.querySelectorAll('select').forEach(el=>{el.selectedIndex=0;});
+  screen.querySelectorAll('input[type="checkbox"]').forEach(el=>{el.checked=false;});
+  // goFormでデフォルト値を再設定
   goForm(id);
   toast('🗑 クリアしました');
 }

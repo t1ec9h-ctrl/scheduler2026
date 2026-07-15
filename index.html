@@ -338,6 +338,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    <!-- 通知 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔔 通知（リマインダー）</div>
+        <div class="tw"><span class="tl" id="m-remind-lbl">30分前</span><label class="tog"><input type="checkbox" id="m-remind-tog" checked onchange="togRemind('m')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb" id="m-remind-body" style="padding:12px 16px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>何分前に通知</label>
+          <input type="number" id="m-remind-min" value="30" min="0" max="1440" style="width:100px;text-align:center;">
+        </div>
+      </div>
+    </div>
+
     <!-- 件名プレビュー -->
     <div class="sec">
       <div class="sh"><div class="st">登録内容</div></div>
@@ -515,7 +529,21 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
           <label>作業内容<span style="font-size:10px;color:var(--text3);margin-left:6px;font-family:var(--mono)">件名に反映されます</span></label>
           <input type="text" id="i-work" placeholder="例：定期点検、水処理設備整備" oninput="updateITitle()">
         </div>
-        <!-- 件名プレビュー -->
+        <!-- 通知 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔔 通知（リマインダー）</div>
+        <div class="tw"><span class="tl" id="i-remind-lbl">30分前</span><label class="tog"><input type="checkbox" id="i-remind-tog" checked onchange="togRemind('i')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb" id="i-remind-body" style="padding:12px 16px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>何分前に通知</label>
+          <input type="number" id="i-remind-min" value="30" min="0" max="1440" style="width:100px;text-align:center;">
+        </div>
+      </div>
+    </div>
+
+    <!-- 件名プレビュー -->
         <div class="title-preview-label">件名プレビュー</div>
         <div class="title-preview" id="i-title-preview">入力すると自動生成されます</div>
       </div>
@@ -720,6 +748,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
 
+    <!-- 通知 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔔 通知（リマインダー）</div>
+        <div class="tw"><span class="tl" id="tv-remind-lbl">なし</span><label class="tog"><input type="checkbox" id="tv-remind-tog"  onchange="togRemind('tv')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb" id="tv-remind-body" style="display:none;padding:12px 16px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>何分前に通知</label>
+          <input type="number" id="tv-remind-min" value="30" min="0" max="1440" style="width:100px;text-align:center;">
+        </div>
+      </div>
+    </div>
+
     <!-- 件名プレビュー -->
     <div class="sec">
       <div class="sh"><div class="st">登録内容</div></div>
@@ -853,6 +895,20 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       <div class="sb" style="padding:12px 16px;">
         <div class="cat-chips" id="att-cat-chips">
           <div class="cat-chip cat-none active" onclick="selCat(this,'','','att')">なし</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="sec">
+      <div class="sh">
+        <div class="st">🔔 通知（リマインダー）</div>
+        <div class="tw"><span class="tl" id="att-remind-lbl">なし</span><label class="tog"><input type="checkbox" id="att-remind-tog"  onchange="togRemind('att')"><div class="tt"></div><div class="tth"></div></label></div>
+      </div>
+      <div class="sb" id="att-remind-body" style="display:none;padding:12px 16px;">
+        <div class="field" style="margin-bottom:0;">
+          <label>何分前に通知</label>
+          <input type="number" id="att-remind-min" value="30" min="0" max="1440" style="width:100px;text-align:center;">
         </div>
       </div>
     </div>
@@ -1281,6 +1337,7 @@ function init(){
   updateBadge();renderCustSel();renderPartnerSel();renderCatChips();initSort();
   renderSubmitButtons('m');renderSubmitButtons('i');renderSubmitButtons('att');renderSubmitButtons('tv');
   initTheme();
+  checkBackupReminder();
   showScreen('select');
 }
 function save(){localStorage.setItem('sched_v5',JSON.stringify({db,cfg}));}
@@ -1619,7 +1676,7 @@ function buildMeeting(){
   if(prepOn&&date){const rd=new Date(date);rd.setDate(rd.getDate()-pDays);prep=`${rd.getFullYear()}-${String(rd.getMonth()+1).padStart(2,'0')}-${String(rd.getDate()).padStart(2,'0')}T${pTime}:00+09:00`;}
   const memo=[agenda?'【議題】\n'+agenda:'',atts.length?'【参加者】'+atts.join('、'):'',todos.length?'【事前準備】\n'+todos.map(t=>'☐ '+t).join('\n'):''].filter(Boolean).join('\n\n');
   const mCat=selCatM.name||mS.type;
-  return{title:`[${mS.type}] ${title}`,start:`${date}T${start}:00+09:00`,end:`${date}T${end}:00+09:00`,location:loc,category:mCat,showAs:showAsM,units:'',assign:'',prep,memo,travelEvents:[],rrule:'',isAllday:false,furikaeEvent:null,furikaeEvents:[],travelGoStart:'',travelGoEnd:'',travelGoMemo:'',travelBackStart:'',travelBackEnd:'',travelBackMemo:'',travelOfficeStart:'',travelOfficeEnd:'',travelReturnStart:'',travelReturnEnd:'',travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:''};
+  return{title:`[${mS.type}] ${title}`,start:`${date}T${start}:00+09:00`,end:`${date}T${end}:00+09:00`,location:loc,category:mCat,showAs:showAsM, remind:getRemind('m'),units:'',assign:'',prep,memo,travelEvents:[],rrule:'',isAllday:false,furikaeEvent:null,furikaeEvents:[],travelGoStart:'',travelGoEnd:'',travelGoMemo:'',travelBackStart:'',travelBackEnd:'',travelBackMemo:'',travelOfficeStart:'',travelOfficeEnd:'',travelReturnStart:'',travelReturnEnd:'',travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:''};
 }
 
 function buildInspection(){
@@ -1695,7 +1752,7 @@ function buildInspection(){
   const iFurikaeEvent = iFurikaeEvents.length ? iFurikaeEvents[0] : null;
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${endDate}T${end}:00+09:00`,
-    location:iS.custName, category:catLabel, showAs:showAsI,
+    location:iS.custName, category:catLabel, showAs:showAsI, remind:getRemind('i'),
     units:units.join('・'), assign, work, prep, memo:memoFull, rrule,
     furikaeEvent: iFurikaeEvent,
     furikaeEvents: iFurikaeEvents,
@@ -1856,6 +1913,7 @@ function doMailto(){
     start: stripTZ(p.start), end: stripTZ(p.end),
     location: p.location, category: p.category,
     showAs: p.showAs, memo: p.memo, prep: stripTZ(p.prep),
+    remind: p.remind===undefined?30:p.remind,
     travelGoStart:     stripTZ(p.travelGoStart),
     travelGoEnd:       stripTZ(p.travelGoEnd),
     travelGoMemo:      p.travelGoMemo,
@@ -1950,7 +2008,9 @@ function doICS(){
     if(category) ev+=`CATEGORIES:${escICS(category)}\r\n`;
     if(showAs) ev+=`TRANSP:${showAs==='free'||showAs==='tentative'?'TRANSPARENT':'OPAQUE'}\r\n`;
     if(rrule) ev+=`RRULE:${rrule}\r\n`;
-    ev+=`BEGIN:VALARM\r\nTRIGGER:-PT30M\r\nACTION:DISPLAY\r\nDESCRIPTION:${escICS(title)}\r\nEND:VALARM\r\nEND:VEVENT\r\n`;
+    const rm = (remindMin===undefined||remindMin===null) ? 30 : remindMin;
+    if(rm >= 0) ev+=`BEGIN:VALARM\r\nTRIGGER:-PT${rm}M\r\nACTION:DISPLAY\r\nDESCRIPTION:${escICS(title)}\r\nEND:VALARM\r\n`;
+    ev+=`END:VEVENT\r\n`;
     return ev;
   }
   let ics=`BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Scheduler//JP\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n`;
@@ -1968,7 +2028,7 @@ function doICS(){
     ev+=`TRANSP:${transp}\r\nEND:VEVENT\r\n`;
     ics+=ev;
   } else {
-    ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'', p.category||'');
+    ics+=makeEvent(p.title, p.start, p.end, p.memo, p.location, p.showAs, p.rrule||'', p.category||'', p.remind);
   }
   if(p.prep){
     const prepEnd=p.prep.replace(/T(\d{2}):(\d{2})/,(m,h,min)=>`T${h}:${String(parseInt(min)+30).padStart(2,'0')}`);
@@ -2425,7 +2485,7 @@ function buildAttendance(){
       isAllday: true,
       memo:`${date.replace(/-/g,'/')}（${type}）の振替`,
       category: selCatAtt.name||'振替休日',
-      showAs:'busy',
+      showAs:'busy', remind:getRemind('att'),
     };
   }
   // 振替休日の場合は件名に「いつの振替か」を追加
@@ -2434,7 +2494,7 @@ function buildAttendance(){
     ? `振替休日（${furikaeSource ? fmtJP(furikaeSource) : fmtJP(date)}分）`
     : type;
   return{title:attTitle, start:startDT, end:endDT, location:'', category:catLabel,
-         showAs:showAsAtt, units:'', assign:'', work:'', prep:'', memo,
+         showAs:showAsAtt, remind:getRemind('att'), units:'', assign:'', work:'', prep:'', memo,
          travelEvents:[], rrule:attRrule, isAllday:allday, furikaeEvent,
          furikaeEvents: furikaeEvent ? [furikaeEvent] : [],
          travelGoStart:'',travelGoEnd:'',travelGoMemo:'',
@@ -2933,7 +2993,7 @@ function buildTravel(){
   const memo  = t.memo(cust, company, from);
   return{
     title, start:`${date}T${start}:00+09:00`, end:`${date}T${end}:00+09:00`,
-    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:(tvState.showAs||'oof'),
+    location:cust, category:(db.categories.find(c=>c.name==='外出')?.name||'外出'), showAs:(tvState.showAs||'oof'), remind:getRemind('tv'),
     units:'', assign:'', work:'', prep:'', memo,
     travelEvents:[], rrule:'', isAllday:false,
     furikaeEvent:null, furikaeEvents:[],
@@ -3459,6 +3519,31 @@ function autoEndTime(prefix){
   const [h, m] = startEl.value.split(':').map(Number);
   const endH = (h + 1) % 24;
   endEl.value = String(endH).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+
+function togRemind(p){
+  const on = document.getElementById(p+'-remind-tog').checked;
+  document.getElementById(p+'-remind-body').style.display = on ? '' : 'none';
+  const min = document.getElementById(p+'-remind-min')?.value || 30;
+  document.getElementById(p+'-remind-lbl').textContent = on ? `${min}分前` : 'なし';
+}
+
+function getRemind(p){
+  const on = document.getElementById(p+'-remind-tog')?.checked;
+  if(!on) return -1;
+  return Number(document.getElementById(p+'-remind-min')?.value || 30);
+}
+
+function checkBackupReminder(){
+  const last = localStorage.getItem('lastExport');
+  const hasData = db.customers.length > 0 || db.partners.length > 0;
+  if(!hasData) return;
+  const now = Date.now();
+  if(!last || now - Number(last) > 30*24*3600*1000){
+    setTimeout(()=>{
+      toast('💾 マスタのバックアップがおすすめです（設定→エクスポート）');
+    }, 2000);
+  }
 }
 
 function togHelp(btn){

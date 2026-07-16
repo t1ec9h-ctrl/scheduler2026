@@ -2000,7 +2000,7 @@ function doICS(){
   const p=pending;
   const pZ2=n=>String(n).padStart(2,'0');
   const freeOrBusy=sa=>(sa==='free'?'FREE':sa==='tentative'?'TENTATIVE':sa==='oof'?'OOF':'BUSY');
-  function makeEvent(title, start, end, desc, loc, showAs, rrule, category){
+  function makeEvent(title, start, end, desc, loc, showAs, rrule, category, remindMin){
     let ev=`BEGIN:VEVENT\r\nUID:${uid()}\r\nDTSTAMP:${stamp()}\r\nDTSTART;TZID=Asia/Tokyo:${toICS(start)}\r\nDTEND;TZID=Asia/Tokyo:${toICS(end)}\r\nSUMMARY:${escICS(title)}\r\n`;
     if(loc) ev+=`LOCATION:${escICS(loc)}\r\n`;
     if(desc) ev+=`DESCRIPTION:${escICS(desc)}\r\n`;

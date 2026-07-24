@@ -1908,9 +1908,13 @@ function doMailto(){
   }
 
   // 通常（繰り返しなし）→ 1件の配列として送る
+  const isAD = !!p.isAllday;
+  const adDate = d => d ? (d.includes('-') ? d : `${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}`) : '';
   const singleEvent = {
     title: p.title,
-    start: stripTZ(p.start), end: stripTZ(p.end),
+    start: isAD ? adDate(p.start)+'T00:00:00' : stripTZ(p.start),
+    end:   isAD ? adDate(p.end)+'T00:00:00'   : stripTZ(p.end),
+    isAllday: isAD,
     location: p.location, category: p.category,
     showAs: p.showAs, memo: p.memo, prep: stripTZ(p.prep),
     remind: p.remind===undefined?30:p.remind,
@@ -1928,8 +1932,27 @@ function doMailto(){
     travelSiteStart:   stripTZ(p.travelSiteStart),
     travelSiteEnd:     stripTZ(p.travelSiteEnd),
   };
+  const events=[singleEvent];
+  // 振替休日イベントを追加（点検フォームの振替休日）
+  const fl = p.furikaeEvents && p.furikaeEvents.length ? p.furikaeEvents : (p.furikaeEvent ? [p.furikaeEvent] : []);
+  fl.forEach(fe=>{
+    events.push({
+      title: fe.title,
+      start: adDate(fe.start)+'T00:00:00',
+      end:   adDate(fe.end)+'T00:00:00',
+      isAllday: true,
+      location:'', category: p.category||'休暇',
+      showAs:'busy', memo: fe.memo||'', prep:'',
+      remind: -1,
+      travelGoStart:'', travelGoEnd:'', travelGoMemo:'',
+      travelBackStart:'', travelBackEnd:'', travelBackMemo:'',
+      travelOfficeStart:'', travelOfficeEnd:'',
+      travelReturnStart:'', travelReturnEnd:'',
+      travelSiteTitle:'', travelSiteStart:'', travelSiteEnd:'',
+    });
+  });
   const subject=encodeURIComponent('SCHED: '+p.title);
-  const body=encodeURIComponent(JSON.stringify({events:[singleEvent]},null,2));
+  const body=encodeURIComponent(JSON.stringify({events},null,2));
   window.location.href=`mailto:${encodeURIComponent(cfg.email)}?subject=${subject}&body=${body}`;
   toast('✅ メールアプリが開きます。送信ボタンを押してください！');
 }

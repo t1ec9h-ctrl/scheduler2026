@@ -2058,11 +2058,35 @@ function doICS(){
     const prepEnd=p.prep.replace(/T(\d{2}):(\d{2})/,(m,h,min)=>`T${h}:${String(parseInt(min)+30).padStart(2,'0')}`);
     ics+=makeEvent(`📋【事前準備 期限】${p.title}`, p.prep, prepEnd, p.title+'の事前準備期限です。', '', 'free', '', '');
   }
-  // travel events
+  // travel events（繰り返し対応）
   if(p.travelEvents&&p.travelEvents.length){
-    p.travelEvents.forEach(te=>{
-      ics+=makeEvent(te.title, te.start, te.end, te.memo||'', '', 'oof', '', (db.categories.find(c=>c.name==='外出')?.name||''));
-    });
+    const outCat = (db.categories.find(c=>c.name==='外出')?.name||'');
+    const dailyTravel = document.getElementById('i-rec-daily-travel')?.checked || false;
+    const occs = p.rrule ? expandRrule(p.start, p.end, p.rrule) : null;
+    const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const redateICS = (dt, occDT) => {
+      if(!dt) return '';
+      const time = dt.includes('T') ? dt.split('T')[1] : '';
+      const date = occDT.includes('T') ? occDT.split('T')[0] : occDT;
+      return date + 'T' + time;
+    };
+    if(occs && occs.length > 1){
+      // 繰り返しあり：毎日トグルON→全日程、OFF→初日/最終日のみ
+      const lastIdx = occs.length - 1;
+      occs.forEach((occ, i)=>{
+        p.travelEvents.forEach(te=>{
+          const isStartSide = te.fromTo==='go' || te.fromTo==='office' || te.fromTo==='site';
+          const applies = dailyTravel || (isStartSide ? i===0 : i===lastIdx);
+          if(!applies) return;
+          const anchor = isStartSide ? occ.start : occ.end;
+          ics+=makeEvent(te.title, redateICS(te.start, anchor), redateICS(te.end, anchor), te.memo||'', '', 'oof', '', outCat);
+        });
+      });
+    } else {
+      p.travelEvents.forEach(te=>{
+        ics+=makeEvent(te.title, te.start, te.end, te.memo||'', '', 'oof', '', outCat);
+      });
+    }
   }
   // 振替休日（複数対応）
   const furikaeList = p.furikaeEvents && p.furikaeEvents.length ? p.furikaeEvents : (p.furikaeEvent ? [p.furikaeEvent] : []);

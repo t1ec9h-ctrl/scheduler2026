@@ -1725,7 +1725,7 @@ function buildInspection(){
   // recurrence
   const recOn = document.getElementById('i-rec-tog')?.checked;
   const recEnd = document.getElementById('i-rec-end')?.value;
-  const rrule = recOn && recEnd ? `FREQ=${recPattern};UNTIL=${recEnd.replace(/-/g,'')}T235959Z` : '';
+  const rrule = recOn && recEnd ? `FREQ=${recPattern};UNTIL=${recEnd.replace(/-/g,'')}T145959Z` : '';
   // Power Automate向けにフラット化（各パターンのstart/endを個別フィールドで渡す）
   const teGo     = travelEvents.find(e=>e.fromTo==='go');
   const teBack   = travelEvents.find(e=>e.fromTo==='back');
@@ -1851,9 +1851,10 @@ function expandRrule(startDT, endDT, rrule){
     const dow = cur.getDay();
     const inByday = !bydays || bydays.some(d=>dayMap[d]===dow);
     if(inByday){
-      const dateStr = cur.toISOString().split('T')[0];
+      const localDate = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const dateStr = localDate(cur);
       const sEnd = new Date(cur.getTime() + durMs);
-      const eDateStr = sEnd.toISOString().split('T')[0];
+      const eDateStr = localDate(sEnd);
       events.push({
         start: sTime ? `${dateStr}T${sTime}` : dateStr,
         end:   eTime ? `${eDateStr}T${eTime}` : eDateStr,
@@ -2490,7 +2491,7 @@ function buildAttendance(){
   const attRecOn  = document.getElementById('att-rec-tog')?.checked;
   const attEndDate = document.getElementById('att-end-date')?.value;
   if(attRecOn && attEndDate && ['社内勤務','休日出勤'].includes(type)){
-    attRrule = `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=${attEndDate.replace(/-/g,'')}T235959Z`;
+    attRrule = `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=${attEndDate.replace(/-/g,'')}T145959Z`;
   }
 
   // 振替休日

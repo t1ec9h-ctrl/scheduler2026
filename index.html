@@ -1631,6 +1631,17 @@ function applyIrr(){
   const name=document.getElementById('irr-name').value.trim();
   const ur=document.getElementById('irr-units').value.trim();
   if(!name){toast('⚠️ 現場名を入力してください');return;}
+  // 移動予定フォームから開いた場合
+  if(document.getElementById('modal-irr').dataset.caller==='travel'){
+    tvState.custId='irr';
+    tvState.custName=name;
+    document.getElementById('tv-cust').value='';
+    document.getElementById('modal-irr').dataset.caller='';
+    closeModal();
+    if(typeof updateTvPreview==='function') updateTvPreview();
+    toast('✅ イレギュラー現場を設定しました');
+    return;
+  }
   iS.custId='irr';iS.custName=name;iS.selUnits=[];iS.irrNames=[];
   const g=document.getElementById('i-ug');g.innerHTML='';
   if(ur){ur.split(/[,、，]/).map(s=>s.trim()).filter(Boolean).forEach((u,i)=>{

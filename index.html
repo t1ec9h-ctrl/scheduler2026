@@ -291,6 +291,29 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
       </div>
     </div>
     <div class="opt-divider" id="m-opt-div" onclick="togOptSecs('m')"><span><span class="opt-arr" id="m-opt-arr">▼</span> オプション</span></div>
+    <!-- 移動予定（社外打合せ用） -->
+    <div class="sec" id="m-travel-sec" style="display:none;">
+      <div class="sh">
+        <div class="st">🚗 移動予定</div>
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">外出中で自動追加</div>
+      </div>
+      <div class="sb">
+        <div class="field">
+          <label>移動時間（分）</label>
+          <input type="number" id="m-travel-min" value="60" min="5" max="480" style="width:100px;text-align:center;">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>移動パターン（複数選択可）</label>
+          <div class="cg" style="flex-direction:column;gap:8px;">
+            <div class="chip" id="m-tr-go"     onclick="togMTravel('go')"    >🏠 → 🏢　直行（自宅 → 訪問先）</div>
+            <div class="chip" id="m-tr-back"   onclick="togMTravel('back')"  >🏢 → 🏠　直帰（訪問先 → 自宅）</div>
+            <div class="chip" id="m-tr-office" onclick="togMTravel('office')">🏢 → 🏢　出社後移動（会社 → 訪問先）</div>
+            <div class="chip" id="m-tr-return" onclick="togMTravel('return')">🏢 → 🏢　帰社（訪問先 → 会社）</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="sec">
       <div class="sh"><div class="st">議題・内容</div></div>
       <div class="sb"><textarea id="m-agenda" placeholder="1. 進捗共有&#10;2. 課題確認&#10;3. 来週の予定"></textarea></div>
@@ -1502,6 +1525,8 @@ function goForm(fid,sub){
     showScreen('attendance');
     return;
   }
+  resetMTravel();
+  const mts=document.getElementById('m-travel-sec');if(mts)mts.style.display='none';
   if(sub==='task'){setChipIdx('mt-chips',2,'co','個人タスク');}
   else if(sub==='other'){setChipIdx('mt-chips',3,'cp','その他');}
   
@@ -1524,7 +1549,7 @@ function showScreen(id){
 function selChip(gid,el,c,val){
   document.querySelectorAll('#'+gid+' .chip').forEach(ch=>{ch.className='chip';});
   el.classList.add(c);
-  if(gid==='mt-chips'){mS.type=val;mS.color=c;autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');updateMTitle();}
+  if(gid==='mt-chips'){mS.type=val;mS.color=c;autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');updateMTitle();const mts=document.getElementById('m-travel-sec');if(mts)mts.style.display=val==='社外打合せ'?'':'none';if(val!=='社外打合せ')resetMTravel();}
   if(gid==='i-insp'){
     iS.inspType=val;iS.inspColor=c;
     const isOther=val==='その他';
@@ -1687,7 +1712,25 @@ function buildMeeting(){
   if(prepOn&&date){const rd=new Date(date);rd.setDate(rd.getDate()-pDays);prep=`${rd.getFullYear()}-${String(rd.getMonth()+1).padStart(2,'0')}-${String(rd.getDate()).padStart(2,'0')}T${pTime}:00+09:00`;}
   const memo=[agenda?'【議題】\n'+agenda:'',atts.length?'【参加者】'+atts.join('、'):'',todos.length?'【事前準備】\n'+todos.map(t=>'☐ '+t).join('\n'):''].filter(Boolean).join('\n\n');
   const mCat=selCatM.name||mS.type;
-  return{title:`[${mS.type}] ${title}`,start:`${date}T${start}:00+09:00`,end:`${date}T${end}:00+09:00`,location:loc,category:mCat,showAs:showAsM, remind:getRemind('m'),units:'',assign:'',prep,memo,travelEvents:[],rrule:'',isAllday:false,furikaeEvent:null,furikaeEvents:[],travelGoStart:'',travelGoEnd:'',travelGoMemo:'',travelBackStart:'',travelBackEnd:'',travelBackMemo:'',travelOfficeStart:'',travelOfficeEnd:'',travelReturnStart:'',travelReturnEnd:'',travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:''};
+  // 社外打合せの移動予定
+  const mTravelMin = Number(document.getElementById('m-travel-min')?.value||60);
+  const addMin=(t,mins)=>{const[h,m]=t.split(':').map(Number);const tot=h*60+m+mins;const nh=Math.floor(((tot%1440)+1440)%1440/60);const nm=((tot%1440)+1440)%1440%60;return`${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;};
+  const mCompany=cfg.company||'会社';
+  const mTravelEvents=[];
+  const mDest = loc || title;
+  if(mS.type==='社外打合せ'){
+    if(mTravelState.go)     mTravelEvents.push({title:'直行', memo:`自宅 → ${mDest}`, start:`${date}T${addMin(start,-mTravelMin)}:00+09:00`, end:`${date}T${start}:00+09:00`, fromTo:'go'});
+    if(mTravelState.office) mTravelEvents.push({title:'移動', memo:`${mCompany} → ${mDest}`, start:`${date}T${addMin(start,-mTravelMin)}:00+09:00`, end:`${date}T${start}:00+09:00`, fromTo:'office'});
+    if(mTravelState.back)   mTravelEvents.push({title:'直帰', memo:`${mDest} → 自宅`, start:`${date}T${end}:00+09:00`, end:`${date}T${addMin(end,mTravelMin)}:00+09:00`, fromTo:'back'});
+    if(mTravelState.return) mTravelEvents.push({title:'帰社', memo:`${mDest} → ${mCompany}`, start:`${date}T${end}:00+09:00`, end:`${date}T${addMin(end,mTravelMin)}:00+09:00`, fromTo:'return'});
+  }
+  const tge=(k)=>mTravelEvents.find(e=>e.fromTo===k);
+  return{title:`[${mS.type}] ${title}`,start:`${date}T${start}:00+09:00`,end:`${date}T${end}:00+09:00`,location:loc,category:mCat,showAs:showAsM, remind:getRemind('m'),units:'',assign:'',prep,memo,travelEvents:mTravelEvents,rrule:'',isAllday:false,furikaeEvent:null,furikaeEvents:[],
+    travelGoStart:tge('go')?.start||'',travelGoEnd:tge('go')?.end||'',travelGoMemo:tge('go')?.memo||'',
+    travelBackStart:tge('back')?.start||'',travelBackEnd:tge('back')?.end||'',travelBackMemo:tge('back')?.memo||'',
+    travelOfficeStart:tge('office')?.start||'',travelOfficeEnd:tge('office')?.end||'',
+    travelReturnStart:tge('return')?.start||'',travelReturnEnd:tge('return')?.end||'',
+    travelSiteTitle:'',travelSiteStart:'',travelSiteEnd:'',travelLabel:''};
 }
 
 function buildInspection(){
@@ -3603,6 +3646,23 @@ function checkBackupReminder(){
       toast('💾 マスタのバックアップがおすすめです（設定→エクスポート）');
     }, 2000);
   }
+}
+
+// ===== 会議フォームの移動予定 =====
+let mTravelState = {go:false, back:false, office:false, return:false};
+
+function togMTravel(key){
+  mTravelState[key] = !mTravelState[key];
+  const el = document.getElementById('m-tr-'+key);
+  if(el) el.classList.toggle('cb', mTravelState[key]);
+}
+
+function resetMTravel(){
+  mTravelState = {go:false, back:false, office:false, return:false};
+  ['go','back','office','return'].forEach(k=>{
+    const el = document.getElementById('m-tr-'+k);
+    if(el) el.classList.remove('cb');
+  });
 }
 
 function togHelp(btn){

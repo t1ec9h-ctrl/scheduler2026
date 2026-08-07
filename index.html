@@ -108,6 +108,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
 .chip.co{background:var(--odim);border-color:var(--orange);color:var(--orange);}
 .chip.cr{background:var(--rdim);border-color:var(--red);color:var(--red);}
 .chip.cp{background:var(--pdim);border-color:var(--purple);color:var(--purple);}
+.chip.cy{background:var(--ydim);border-color:var(--yellow);color:var(--yellow);}
 .ug{display:flex;flex-wrap:wrap;gap:8px;}
 .uc{background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer;color:var(--text2);font-family:var(--mono);user-select:none;}
 .uc.sel{background:var(--gdim);border-color:var(--green);color:var(--green);}
@@ -271,6 +272,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
         <div class="cg" id="mt-chips">
           <div class="chip cb" onclick="selChip('mt-chips',this,'cb','社内会議')">👥 社内</div>
           <div class="chip" onclick="selChip('mt-chips',this,'cg2','社外打合せ')">🤝 社外</div>
+          <div class="chip" onclick="selChip('mt-chips',this,'cy','研修')">🎓 研修</div>
           <div class="chip" onclick="selChip('mt-chips',this,'co','個人タスク')">📌 タスク</div>
           <div class="chip" onclick="selChip('mt-chips',this,'cp','その他')">📝 その他</div>
         </div>
@@ -292,7 +294,7 @@ textarea{resize:none;min-height:88px;line-height:1.7;}
     </div>
     <div class="opt-divider" id="m-opt-div" onclick="togOptSecs('m')"><span><span class="opt-arr" id="m-opt-arr">▼</span> オプション</span></div>
     <!-- 移動予定（社外打合せ用） -->
-    <div class="sec" id="m-travel-sec" style="display:none;">
+    <div class="sec" id="m-travel-sec">
       <div class="sh">
         <div class="st">🚗 移動予定</div>
         <div style="font-size:10px;color:var(--text3);font-family:var(--mono);">外出中で自動追加</div>
@@ -1526,7 +1528,6 @@ function goForm(fid,sub){
     return;
   }
   resetMTravel();
-  const mts=document.getElementById('m-travel-sec');if(mts)mts.style.display='none';
   if(sub==='task'){setChipIdx('mt-chips',2,'co','個人タスク');}
   else if(sub==='other'){setChipIdx('mt-chips',3,'cp','その他');}
   
@@ -1549,7 +1550,7 @@ function showScreen(id){
 function selChip(gid,el,c,val){
   document.querySelectorAll('#'+gid+' .chip').forEach(ch=>{ch.className='chip';});
   el.classList.add(c);
-  if(gid==='mt-chips'){mS.type=val;mS.color=c;autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');updateMTitle();const mts=document.getElementById('m-travel-sec');if(mts)mts.style.display=val==='社外打合せ'?'':'none';if(val!=='社外打合せ')resetMTravel();}
+  if(gid==='mt-chips'){mS.type=val;mS.color=c;autoSetCategory('m',val==='社外打合せ'?'社外打合せ':'社内会議');updateMTitle();}
   if(gid==='i-insp'){
     iS.inspType=val;iS.inspColor=c;
     const isOther=val==='その他';
@@ -1718,7 +1719,7 @@ function buildMeeting(){
   const mCompany=cfg.company||'会社';
   const mTravelEvents=[];
   const mDest = loc || title;
-  if(mS.type==='社外打合せ'){
+  {
     if(mTravelState.go)     mTravelEvents.push({title:'直行', memo:`自宅 → ${mDest}`, start:`${date}T${addMin(start,-mTravelMin)}:00+09:00`, end:`${date}T${start}:00+09:00`, fromTo:'go'});
     if(mTravelState.office) mTravelEvents.push({title:'移動', memo:`${mCompany} → ${mDest}`, start:`${date}T${addMin(start,-mTravelMin)}:00+09:00`, end:`${date}T${start}:00+09:00`, fromTo:'office'});
     if(mTravelState.back)   mTravelEvents.push({title:'直帰', memo:`${mDest} → 自宅`, start:`${date}T${end}:00+09:00`, end:`${date}T${addMin(end,mTravelMin)}:00+09:00`, fromTo:'back'});
